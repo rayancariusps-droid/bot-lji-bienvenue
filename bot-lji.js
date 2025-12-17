@@ -27,7 +27,7 @@ client.on("guildMemberAdd", member => {
 
 // Poster les règles automatiquement si le salon est vide
 client.on("ready", async () => {
-  const rulesChannel = client.channels.cache.get(process.env.ROLES_CHANNEL_ID); // tu peux mettre le salon de règles ici si tu veux
+  const rulesChannel = client.channels.cache.get(process.env.RULES_CHANNEL_ID);
   if (!rulesChannel) return;
 
   const messages = await rulesChannel.messages.fetch({ limit: 1 });

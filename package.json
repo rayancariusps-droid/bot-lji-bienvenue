@@ -1,10 +1,13 @@
 {
   "name": "bot-lji-bienvenue",
   "version": "1.0.0",
+  "description": "Bot Discord LJI - message de bienvenue et règles",
   "main": "bot-lji.js",
   "scripts": {
     "start": "node bot-lji.js & node server.js"
   },
+  "author": "TonNom",
+  "license": "ISC",
   "dependencies": {
     "discord.js": "^14.11.0",
     "express": "^4.18.2"

@@ -1,0 +1,11 @@
+{
+  "name": "bot-lji-bienvenue",
+  "version": "1.0.0",
+  "main": "bot-lji.js",
+  "scripts": {
+    "start": "node bot-lji.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.11.0"
+  }
+}

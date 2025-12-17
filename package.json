@@ -1,11 +1,15 @@
 {
   "name": "bot-lji-bienvenue",
   "version": "1.0.0",
+  "description": "Bot Discord LJI avec message de bienvenue et règlement",
   "main": "bot-lji.js",
   "scripts": {
     "start": "node bot-lji.js"
   },
   "dependencies": {
-    "discord.js": "^14.15.3"
+    "discord.js": "^14.11.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

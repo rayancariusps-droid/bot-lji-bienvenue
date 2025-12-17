@@ -9,3 +9,6 @@
     "discord.js": "^14.11.0"
   }
 }
+"scripts": {
+  "start": "node bot-lji.js & node server.js"
+}

@@ -1,4 +1,14 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Bot LJI en ligne 🚀");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("Serveur web actif sur le port " + PORT);
+});const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 const fs = require("fs");
 
 const client = new Client({

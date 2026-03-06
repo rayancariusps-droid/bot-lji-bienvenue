@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 
 app.get("/", (req, res) => {
-  res.send("Bot LJI en ligne 🌸");
+  res.send("Bot LJI en ligne 🐾");
 });
 
 const PORT = process.env.PORT || 3000;
@@ -45,9 +45,10 @@ client.on("guildMemberAdd", async member => {
   const memberCount = member.guild.memberCount;
 
   channel.send(
-    `🌸 Bienvenue sur **LJI World** ${member} !\n` +
+    `🐾 Bienvenue sur **や . Naya . lji** ${member} !\n` +
     `>>> Nous sommes maintenant **${memberCount}** membres\n` +
-    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> `
+    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n\n` +
+    `<@&1479358568091357234>`
   );
 });
 
@@ -72,7 +73,7 @@ client.on("messageCreate", async message => {
     if (fs.existsSync(FILE)) return;
 
     const embed = new EmbedBuilder()
-      .setTitle(" Règlement 💮")
+      .setTitle(" Règlement 🐾")
       .setColor("Blue")
       .setDescription(
         "**I. Le respect**\nRespectez-vous tous...\n\n" +

@@ -1,17 +1,17 @@
-// 🌐 Serveur web pour rester en ligne (Render / Freshping)
+// 🌐 Serveur web pour garder le bot en ligne
 const express = require("express");
 const app = express();
 
 app.get("/", (req, res) => {
-  res.send("Bot LJI en ligne 🐾");
+  res.send("Bot や . Naya . lji en ligne 🐾");
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Serveur web actif sur le port " + PORT);
+  console.log("Serveur web actif");
 });
 
-// 🤖 Discord
+// 🤖 Discord bot
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 const fs = require("fs");
 
@@ -24,71 +24,89 @@ const client = new Client({
   ]
 });
 
-// 🆔 IDS DES SALONS
+// 📌 IDs
 const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1446702499082928158";
+const ROLES_CHANNEL_ID = "1441931922157735936";
 const REGLEMENT_CHANNEL_ID = "1441951191234908290";
 
-// 📄 Fichier pour savoir si les règles ont déjà été envoyées
 const FILE = "./regles_envoyees.json";
 
-// Bot prêt
 client.on("ready", () => {
   console.log(`Connecté en tant que ${client.user.tag}`);
 });
 
-// Message de bienvenue
+// 🎉 Message de bienvenue
 client.on("guildMemberAdd", async member => {
+
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
   if (!channel) return;
 
   const memberCount = member.guild.memberCount;
 
   channel.send(
-    `🐾 Bienvenue sur **や . Naya . lji** ${member} !\n` +
-    `>>> Nous sommes maintenant **${memberCount}** membres\n` +
-    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n\n` +
-    `<@&1479358568091357234>`
+`🐾 Bienvenue sur **や . Naya . lji** ${member}
+
+Nous sommes maintenant **${memberCount}** membres !
+
+Prends tes rôles dans <#${ROLES_CHANNEL_ID}>
+
+<@&1479358568091357234>`
   );
+
 });
 
-// Commandes
+// 📌 Commandes
 client.on("messageCreate", async message => {
+
   if (message.author.bot) return;
 
   const msg = message.content.toLowerCase();
 
+  // ping
   if (msg === "!ping") {
+
     const sent = await message.channel.send("Pong...");
-    sent.edit(`Pong! Latence : ${sent.createdTimestamp - message.createdTimestamp}ms`);
+    sent.edit(`Pong ! ${sent.createdTimestamp - message.createdTimestamp}ms`);
+
   }
 
+  // membres
   if (msg === "!membres") {
+
     message.channel.send(
-      `Nous sommes actuellement **${message.guild.memberCount}** membres sur le serveur !`
+`Nous sommes actuellement **${message.guild.memberCount}** membres sur le serveur`
     );
+
   }
 
+  // règlement
   if (msg === "!règlement") {
+
     if (fs.existsSync(FILE)) return;
 
     const embed = new EmbedBuilder()
-      .setTitle(" Règlement 🐾")
+      .setTitle("Règlement 🐾")
       .setColor("Blue")
       .setDescription(
-        "**I. Le respect**\nRespectez-vous tous...\n\n" +
-        "**IX. Important**\nSi vous n’aimez pas une personne..."
+`Respectez tous les membres du serveur.
+
+Pas d'insultes.
+Pas de spam.
+Pas de contenu interdit.
+
+Le staff peut sanctionner en cas de problème.`
       );
 
     const channel = await message.guild.channels.fetch(REGLEMENT_CHANNEL_ID);
     if (!channel) return;
 
     await channel.send({ embeds: [embed] });
+
     fs.writeFileSync(FILE, JSON.stringify({ envoye: true }));
-    console.log("Règlement envoyé ✅");
+
   }
 
-  // 🐾 Commande pour envoyer les rôles
+  // 📜 ROLES
   if (msg === "!roles") {
 
     const channel = await message.guild.channels.fetch(ROLES_CHANNEL_ID);
@@ -148,6 +166,7 @@ se rôle est attribué à tous les membres du serveur en bref vous êtes des mem
 
 https://tenor.com/view/black-and-white-couple-scenery-flower-gif-6383016691428567000
 `);
+
   }
 
 });

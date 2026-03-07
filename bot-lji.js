@@ -87,6 +87,69 @@ client.on("messageCreate", async message => {
     fs.writeFileSync(FILE, JSON.stringify({ envoye: true }));
     console.log("Règlement envoyé ✅");
   }
+
+  // 🐾 Commande pour envoyer les rôles
+  if (msg === "!roles") {
+
+    const channel = await message.guild.channels.fetch(ROLES_CHANNEL_ID);
+    if (!channel) return;
+
+    channel.send(`
+<@&1390036255227777197> **chef**
+
+c’est le chef actuel qui gère l’ensemble du serveur. Il gère tout les rôle il a toute les perms 
+
+<@&1390036395493556245> **Vice chef**
+
+c’est le vice chef actuel du serveur qui remplace le chef en cas d’absence qui propose des idées etc.
+
+<@&1448188699052478554>
+
+c’était les 2 personnes qui on été a l’origine de la création du serveur se rôle ne leurs sera jamais retiré.
+
+<@&1446287927180132434>
+
+ce sont les 3 personnes qui on été a l’origine du 2 eme serveur qui se appelait (LJI WORLD) se rôle ne leurs sera jamais retiré.
+
+<@&1392940328733900890> **the first**
+
+cette personne est la personne qui guide l’ensemble du serveur cette a dire les admin les modo etc elle peut donner directement des conseils au chef et au vice chef en cas de besoin.
+
+<@&1478162378825924648> **admin**
+
+un administrateur a presque le même pouvoir que le chef ou vice chef mais sans privilège liés à la gestion du serveur comme le transfert de la propriété du serveur. Il peut gérer les membres,les rôle et les permissions.
+
+<@&1449320025453367378> **modérateur**
+
+Le rôle modérateur inclut des permissions comme la gestion des messages,La suppression de contenu inapproprié et l’interaction avec les membres pour assurer le respect des règles du serveur 
+
+<@&1479683496279543949> **L’animateur**
+
+est responsable de l’animation des discussions et des événements sur le serveur. Ce rôle peut inclure des taches comme organiser des jeux, des concours ou des discussions thématiques L’animateur crée de l’engagement et s’assure que l’ambiance reste vivante et agréable,mais il n’a généralement pas de pouvoir administratifs.
+
+<@&1479683856159211613> **les community managers**
+
+S’occupent à faire de la pub c’est à dire à faire des partenariats ou des échanges en publicité avec d’autres serveur.
+Ils doivent aussi gérer le compte TikTok/youtube du serveur et aussi donné une image positive du serveur
+
+<@&1390086486291910726>
+
+seuls les personnes de l’équipe naya peuvent avoir se rôle 
+
+<@&1431984265393995867> **Perm**
+
+se sont des membres du serveur qui ont des perm en plus comme par exemple rejoindre les voc quand elle sont pleine
+
+<@&1390037539162685462>
+
+se rôle est attribué à tous les membres du serveur en bref vous êtes des membres 
+
+**J’espère que les informations fournies on été claires**
+
+https://tenor.com/view/black-and-white-couple-scenery-flower-gif-6383016691428567000
+`);
+  }
+
 });
 
 client.login(process.env.DISCORD_TOKEN);

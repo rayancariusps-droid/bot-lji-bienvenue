@@ -25,14 +25,14 @@ const client = new Client({
 
 // IDS
 const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1446702499082928158";  // ← ID du salon #『🎨』role
+const ROLES_CHANNEL_ID = "1446702499082928158";  // ← ID corrigé : salon #『🎨』role ou #role
 
 // Bot prêt
 client.on("ready", () => {
   console.log(`Connecté en tant que ${client.user.tag}`);
 });
 
-// Message de bienvenue (exactement comme ta 2e capture préférée)
+// Message de bienvenue (style compact comme tu aimes)
 client.on("guildMemberAdd", async member => {
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
   if (!channel) return;
@@ -40,9 +40,9 @@ client.on("guildMemberAdd", async member => {
   const memberCount = member.guild.memberCount;
 
   channel.send(
-    `🐾 Bienvenue sur **や . Naya . lji** ${member} ! ` +
-    `Nous sommes maintenant **${memberCount}** membres ! ` +
-    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> ` +
+    `🐾 Bienvenue sur **や . Naya . lji** ${member} !\n` +
+    `Nous sommes maintenant **${memberCount}** membres !\n` +
+    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n` +
     `<@&1479358568091357234>`
   );
 });

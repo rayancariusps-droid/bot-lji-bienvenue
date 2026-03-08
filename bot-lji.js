@@ -1,9 +1,9 @@
-// 🌐 Serveur web pour rester en ligne
+// Serveur web pour garder le bot en ligne
 const express = require("express");
 const app = express();
 
 app.get("/", (req, res) => {
-  res.send("Bot や . Naya . lji en ligne 🐾");
+  res.send("Bot Naya LJI en ligne");
 });
 
 const PORT = process.env.PORT || 3000;
@@ -11,8 +11,8 @@ app.listen(PORT, () => {
   console.log("Serveur web actif sur le port " + PORT);
 });
 
-// 🤖 Discord
-const { Client, GatewayIntentBits } = require("discord.js");
+// Discord
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 const fs = require("fs");
 
 const client = new Client({
@@ -24,12 +24,11 @@ const client = new Client({
   ]
 });
 
-// 🆔 IDS DES SALONS
+// IDS
 const WELCOME_CHANNEL_ID = "1441916367942193233";
 const ROLES_CHANNEL_ID = "1441931922157735936";
 const REGLEMENT_CHANNEL_ID = "1441951191234908290";
 
-// 📄 Fichier pour savoir si le règlement a déjà été envoyé
 const FILE = "./regles_envoyees.json";
 
 // Bot prêt
@@ -37,21 +36,20 @@ client.on("ready", () => {
   console.log(`Connecté en tant que ${client.user.tag}`);
 });
 
-// Message de bienvenue
+// Bienvenue
 client.on("guildMemberAdd", async member => {
+
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
   if (!channel) return;
 
   const memberCount = member.guild.memberCount;
 
   channel.send(
-`🐾 Bienvenue sur **や . Naya . lji** ${member} !
+`Bienvenue sur le serveur ${member}
 
-Nous sommes maintenant **${memberCount}** membres !
+Nous sommes maintenant ${memberCount} membres
 
-Prends tes rôles dans <#${ROLES_CHANNEL_ID}> 
-
-<@&1479358568091357234>`
+Prends tes rôles dans <#${ROLES_CHANNEL_ID}>`
   );
 });
 
@@ -62,90 +60,99 @@ client.on("messageCreate", async message => {
 
   const msg = message.content.toLowerCase();
 
-  // ⚡ Ping
+  // Ping
   if (msg === "!ping") {
-    const sent = await message.channel.send("Pong...");
-    sent.edit(`Pong ! Latence : ${sent.createdTimestamp - message.createdTimestamp}ms`);
+
+    const sent = await message.channel.send("Pong");
+    sent.edit(`Pong ${sent.createdTimestamp - message.createdTimestamp}ms`);
+
   }
 
-  // 👥 Membres
+  // Membres
   if (msg === "!membres") {
+
     message.channel.send(
-      `Nous sommes actuellement **${message.guild.memberCount}** membres sur le serveur`
+`Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`
     );
+
   }
 
-  // 📜 Règlement
+  // Règlement
   if (msg === "!règlement") {
+
     if (fs.existsSync(FILE)) return;
 
-    const embed = {
-      title: "Règlement 🐾",
-      description: `
+    const embed = new EmbedBuilder()
+    .setTitle("Règlement")
+    .setColor("#ff4fd8")
+    .setDescription(`
 Respectez tous les membres du serveur.
 
 Pas d'insultes.
 Pas de spam.
 Pas de contenu interdit.
 
-Le staff peut sanctionner en cas de problème.`,
-      color: 0x3498db
-    };
+Le staff peut sanctionner en cas de problème.
+`);
 
     const channel = await message.guild.channels.fetch(REGLEMENT_CHANNEL_ID);
     if (!channel) return;
 
     channel.send({ embeds: [embed] });
+
     fs.writeFileSync(FILE, JSON.stringify({ envoye: true }));
-    console.log("Règlement envoyé ✅");
+
   }
 
-  // 📜 Roles
+  // Roles
   if (msg === "!roles") {
+
     const channel = message.guild.channels.cache.get(ROLES_CHANNEL_ID);
     if (!channel) return message.channel.send("Salon roles introuvable");
 
-    channel.send(`
-<@&1390036255227777197> **chef**
-c’est le chef actuel qui gère l’ensemble du serveur. Il gère tout les rôle il a toute les perms 
+    const embed = new EmbedBuilder()
+    .setColor("#ff4fd8")
+    .setTitle("Voici les informations sur vos rôles")
+    .setDescription(`
+<@&1390036255227777197> Chef  
+c’est le chef actuel qui gère l’ensemble du serveur. Il gère tous les rôles et possède toutes les permissions.
 
-<@&1390036395493556245> **Vice chef**
-c’est le vice chef actuel du serveur qui remplace le chef en cas d’absence qui propose des idées etc.
+<@&1390036395493556245> Vice chef  
+c’est le vice chef actuel du serveur qui remplace le chef en cas d’absence et qui propose des idées.
 
-<@&1448188699052478554>
-c’était les 2 personnes qui on été a l’origine de la création du serveur se rôle ne leurs sera jamais retiré.
+<@&1448188699052478554>  
+ce sont les deux personnes qui ont été à l’origine de la création du serveur. Ce rôle ne leur sera jamais retiré.
 
-<@&1446287927180132434>
-ce sont les 3 personnes qui on été a l’origine du 2 eme serveur qui se appelait (LJI WORLD) se rôle ne leurs sera jamais retiré.
+<@&1446287927180132434>  
+ce sont les trois personnes qui ont été à l’origine du deuxième serveur appelé LJI WORLD.
 
-<@&1392940328733900890> **the first**
-cette personne est la personne qui guide l’ensemble du serveur cette a dire les admin les modo etc elle peut donner directement des conseils au chef et au vice chef en cas de besoin.
+<@&1392940328733900890> The first  
+cette personne guide l’ensemble du staff et peut donner des conseils au chef et au vice chef.
 
-<@&1478162378825924648> **admin**
-un administrateur a presque le même pouvoir que le chef ou vice chef mais sans privilège liés à la gestion du serveur comme le transfert de la propriété du serveur.
+<@&1478162378825924648> Admin  
+un administrateur possède presque les mêmes pouvoirs que le chef ou vice chef mais sans certaines permissions comme le transfert de propriété du serveur.
 
-<@&1449320025453367378> **modérateur**
-Le rôle modérateur inclut des permissions comme la gestion des messages,La suppression de contenu inapproprié et l’interaction avec les membres pour assurer le respect des règles du serveur.
+<@&1449320025453367378> Modérateur  
+le modérateur gère les messages, supprime les contenus inappropriés et veille au respect des règles.
 
-<@&1479683496279543949> **L’animateur**
-est responsable de l’animation des discussions et des événements sur le serveur.
+<@&1479683496279543949> Animateur  
+l’animateur est responsable de l’animation des discussions et des événements sur le serveur.
 
-<@&1479683856159211613> **les community managers**
-S’occupent à faire de la pub c’est à dire à faire des partenariats ou des échanges en publicité avec d’autres serveur.
+<@&1479683856159211613> Community managers  
+s’occupent de la publicité et des réseaux sociaux du serveur.
 
-<@&1390086486291910726>
-seuls les personnes de l’équipe naya peuvent avoir se rôle 
+<@&1390086486291910726>  
+seules les personnes de l’équipe Naya peuvent avoir ce rôle.
 
-<@&1431984265393995867> **Perm**
-se sont des membres du serveur qui ont des perm en plus comme par exemple rejoindre les voc quand elles sont pleines 
+<@&1431984265393995867> Perm  
+ce sont des membres qui possèdent certaines permissions supplémentaires.
 
-<@&1390037539162685462>
-se rôle est attribué à tous les membres du serveur
+J’espère que les informations fournies ont été claires.
+`)
+    .setImage("https://tenor.com/view/black-and-white-couple-scenery-flower-gif-638301669142856700");
 
-**J’espère que les informations fournies on été claires**
+    channel.send({ embeds: [embed] });
 
-https://tenor.com/view/black-and-white-couple-scenery-flower-gif-638301669142856700
-`);
   }
 
 });

@@ -36,7 +36,7 @@ client.on("ready", () => {
   console.log(`Connecté en tant que ${client.user.tag}`);
 });
 
-// Bienvenue
+// Message de bienvenue
 client.on("guildMemberAdd", async member => {
 
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
@@ -51,6 +51,7 @@ Nous sommes maintenant ${memberCount} membres
 
 Prends tes rôles dans <#${ROLES_CHANNEL_ID}>`
   );
+
 });
 
 // Commandes
@@ -60,7 +61,7 @@ client.on("messageCreate", async message => {
 
   const msg = message.content.toLowerCase();
 
-  // Ping
+  // ping
   if (msg === "!ping") {
 
     const sent = await message.channel.send("Pong");
@@ -68,7 +69,7 @@ client.on("messageCreate", async message => {
 
   }
 
-  // Membres
+  // membres
   if (msg === "!membres") {
 
     message.channel.send(
@@ -77,15 +78,15 @@ client.on("messageCreate", async message => {
 
   }
 
-  // Règlement
+  // règlement
   if (msg === "!règlement") {
 
     if (fs.existsSync(FILE)) return;
 
     const embed = new EmbedBuilder()
-    .setTitle("Règlement")
-    .setColor("#ff4fd8")
-    .setDescription(`
+      .setTitle("Règlement")
+      .setColor("#ff4fd8")
+      .setDescription(`
 Respectez tous les membres du serveur.
 
 Pas d'insultes.
@@ -104,16 +105,16 @@ Le staff peut sanctionner en cas de problème.
 
   }
 
-  // Roles
+  // roles
   if (msg === "!roles") {
 
     const channel = message.guild.channels.cache.get(ROLES_CHANNEL_ID);
     if (!channel) return message.channel.send("Salon roles introuvable");
 
     const embed = new EmbedBuilder()
-    .setColor("#ff4fd8")
-    .setTitle("Voici les informations sur vos rôles")
-    .setDescription(`
+      .setColor("#ff4fd8")
+      .setTitle("Voici les informations sur vos rôles")
+      .setDescription(`
 <@&1390036255227777197> Chef  
 c’est le chef actuel qui gère l’ensemble du serveur. Il gère tous les rôles et possède toutes les permissions.
 
@@ -133,10 +134,10 @@ cette personne guide l’ensemble du staff et peut donner des conseils au chef e
 un administrateur possède presque les mêmes pouvoirs que le chef ou vice chef mais sans certaines permissions comme le transfert de propriété du serveur.
 
 <@&1449320025453367378> Modérateur  
-le modérateur gère les messages, supprime les contenus inappropriés et veille au respect des règles.
+le modérateur gère les messages et veille au respect des règles.
 
 <@&1479683496279543949> Animateur  
-l’animateur est responsable de l’animation des discussions et des événements sur le serveur.
+l’animateur est responsable de l’animation des discussions et des événements du serveur.
 
 <@&1479683856159211613> Community managers  
 s’occupent de la publicité et des réseaux sociaux du serveur.
@@ -149,7 +150,7 @@ ce sont des membres qui possèdent certaines permissions supplémentaires.
 
 J’espère que les informations fournies ont été claires.
 `)
-    .setImage("https://tenor.com/view/black-and-white-couple-scenery-flower-gif-638301669142856700");
+      .setImage("https://tenor.com/bAIsv.gif");
 
     channel.send({ embeds: [embed] });
 

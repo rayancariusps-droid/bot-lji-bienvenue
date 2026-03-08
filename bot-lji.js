@@ -150,7 +150,7 @@ ce sont des membres qui possèdent certaines permissions supplémentaires.
 
 **J’espère que les informations fournies ont été claires**
 `)
-      .setImage("https://media.tenor.com/x8v1oNUOmg4AAAAC/flower-anime.gif");
+      .setImage("https://media.tenor.com/4s9s3z6q7vIAAAAC/osage-chan-inabakumori-nukunukunigirimeshi-non-use.gif");  // ← GIF Osage-chan assis (non-use) que tu as choisi
 
     channel.send({ embeds: [embed] });
 

@@ -38,7 +38,6 @@ client.on("ready", () => {
 
 // Message de bienvenue
 client.on("guildMemberAdd", async member => {
-
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
   if (!channel) return;
 
@@ -51,36 +50,29 @@ Nous sommes maintenant ${memberCount} membres
 
 Prends tes rôles dans <#${ROLES_CHANNEL_ID}>`
   );
-
 });
 
 // Commandes
 client.on("messageCreate", async message => {
-
   if (message.author.bot) return;
 
   const msg = message.content.toLowerCase();
 
   // ping
   if (msg === "!ping") {
-
     const sent = await message.channel.send("Pong");
     sent.edit(`Pong ${sent.createdTimestamp - message.createdTimestamp}ms`);
-
   }
 
   // membres
   if (msg === "!membres") {
-
     message.channel.send(
 `Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`
     );
-
   }
 
   // règlement
   if (msg === "!règlement") {
-
     if (fs.existsSync(FILE)) return;
 
     const embed = new EmbedBuilder()
@@ -102,12 +94,10 @@ Le staff peut sanctionner en cas de problème.
     channel.send({ embeds: [embed] });
 
     fs.writeFileSync(FILE, JSON.stringify({ envoye: true }));
-
   }
 
   // roles
   if (msg === "!roles") {
-
     const channel = message.guild.channels.cache.get(ROLES_CHANNEL_ID);
     if (!channel) return message.channel.send("Salon roles introuvable");
 
@@ -125,7 +115,7 @@ c’est le vice chef actuel du serveur qui remplace le chef en cas d’absence e
 ce sont les deux personnes qui ont été à l’origine de la création du serveur. Ce rôle ne leur sera jamais retiré.
 
 <@&1446287927180132434>  
-ce sont les trois personnes qui ont été à l’origine du deuxième serveur appelé LJI WORLD.
+ce sont les trois personnes qui ont été à l’origine du deuxième serveur appelé LJI WORLD. Ce rôle ne leur sera jamais retiré.
 
 <@&1392940328733900890> The first  
 cette personne guide l’ensemble du staff et peut donner des conseils au chef et au vice chef.
@@ -149,13 +139,12 @@ seules les personnes de l’équipe Naya peuvent avoir ce rôle.
 ce sont des membres qui possèdent certaines permissions supplémentaires.
 
 **J’espère que les informations fournies ont été claires**
-`)
-      .setImage("https://media.tenor.com/4s9s3z6q7vIAAAAC/osage-chan-inabakumori-nukunukunigirimeshi-non-use.gif");  // ← GIF Osage-chan assis (non-use) que tu as choisi
+
+https://images-ext-1.discordapp.net/external/VeqVdyL2vXDGHJt_C1SM5NsNlSo_pZqVy9rcr7Oig7A/https/media.tenor.com/2ntArATLDNcAAAPo/train-lag.mp4
+`);
 
     channel.send({ embeds: [embed] });
-
   }
-
 });
 
 client.login(process.env.DISCORD_TOKEN);

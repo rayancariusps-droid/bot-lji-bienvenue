@@ -58,20 +58,15 @@ client.on("messageCreate", async message => {
 
   const msg = message.content.toLowerCase();
 
-  // ping
   if (msg === "!ping") {
     const sent = await message.channel.send("Pong");
     sent.edit(`Pong ${sent.createdTimestamp - message.createdTimestamp}ms`);
   }
 
-  // membres
   if (msg === "!membres") {
-    message.channel.send(
-`Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`
-    );
+    message.channel.send(`Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`);
   }
 
-  // règlement
   if (msg === "!règlement") {
     if (fs.existsSync(FILE)) return;
 
@@ -96,7 +91,6 @@ Le staff peut sanctionner en cas de problème.
     fs.writeFileSync(FILE, JSON.stringify({ envoye: true }));
   }
 
-  // roles
   if (msg === "!roles") {
     const channel = message.guild.channels.cache.get(ROLES_CHANNEL_ID);
     if (!channel) return message.channel.send("Salon roles introuvable");
@@ -139,12 +133,10 @@ seules les personnes de l’équipe Naya peuvent avoir ce rôle.
 ce sont des membres qui possèdent certaines permissions supplémentaires.
 
 **J’espère que les informations fournies ont été claires**
-`);
+`)
+      .setImage("https://media.tenor.com/2ntArATLDNcAAAAM/train-lag.gif");  // ← GIF Lagtrain intégré comme dans ta 2e image
 
-    channel.send({ embeds: [embed] }).then(() => {
-      // GIF numéro 2 : Train Lag (Lagtrain Osage-chan)
-      channel.send("https://media.tenor.com/2ntArATLDNcAAAAM/train-lag.gif");
-    });
+    channel.send({ embeds: [embed] });
   }
 });
 

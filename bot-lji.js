@@ -139,11 +139,12 @@ seules les personnes de l’équipe Naya peuvent avoir ce rôle.
 ce sont des membres qui possèdent certaines permissions supplémentaires.
 
 **J’espère que les informations fournies ont été claires**
-
-https://images-ext-1.discordapp.net/external/VeqVdyL2vXDGHJt_C1SM5NsNlSo_pZqVy9rcr7Oig7A/https/media.tenor.com/2ntArATLDNcAAAPo/train-lag.mp4
 `);
 
-    channel.send({ embeds: [embed] });
+    channel.send({ embeds: [embed] }).then(() => {
+      // GIF numéro 2 : Train Lag (Lagtrain Osage-chan)
+      channel.send("https://media.tenor.com/2ntArATLDNcAAAAM/train-lag.gif");
+    });
   }
 });
 

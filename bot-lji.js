@@ -148,9 +148,9 @@ seules les personnes de l’équipe Naya peuvent avoir ce rôle.
 <@&1431984265393995867> Perm  
 ce sont des membres qui possèdent certaines permissions supplémentaires.
 
-J’espère que les informations fournies ont été claires.
+**J’espère que les informations fournies ont été claires**
 `)
-      .setImage("https://tenor.com/bAIsv.gif");
+      .setImage("https://media.tenor.com/x8v1oNUOmg4AAAAC/flower-anime.gif");
 
     channel.send({ embeds: [embed] });
 

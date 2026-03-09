@@ -25,7 +25,7 @@ const client = new Client({
 
 // IDS
 const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1446702499082928158";
+const ROLES_CHANNEL_ID = "1446702499082928158";     // Salon #『🎨』role
 const REGLEMENT_CHANNEL_ID = "1441951191234908290";
 
 // Bot prêt
@@ -65,7 +65,7 @@ client.on("messageCreate", async message => {
     message.channel.send(`Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`);
   }
 
-  // règlement
+  // règlement (avec GIF intégré grand)
   if (msg === "!règlement") {
     const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
     if (!channel) return message.channel.send("Salon règlement introuvable");
@@ -107,11 +107,10 @@ Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime. P
 • Les avertissements et sanctions sont à la discrétion de l’équipe de modération.
 
 Merci de respecter ces règles pour assurer une bonne ambiance.
-`);
+`)
+      .setImage("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");  // ← Ton GIF ici
 
-    channel.send({ embeds: [embed] }).then(() => {
-      channel.send("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");
-    });
+    channel.send({ embeds: [embed] });
   }
 });
 

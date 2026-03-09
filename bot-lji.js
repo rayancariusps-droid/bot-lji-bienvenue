@@ -25,7 +25,7 @@ const client = new Client({
 
 // IDS
 const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1446702499082928158";
+const ROLES_CHANNEL_ID = "1446702499082928158";     // ← Salon #『🎨』role
 const REGLEMENT_CHANNEL_ID = "1441951191234908290";
 
 // Bot prêt
@@ -33,7 +33,7 @@ client.on("ready", () => {
   console.log(`Connecté en tant que ${client.user.tag}`);
 });
 
-// Message de bienvenue
+// Message de bienvenue (exactement comme tu voulais)
 client.on("guildMemberAdd", async member => {
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
   if (!channel) return;
@@ -41,9 +41,9 @@ client.on("guildMemberAdd", async member => {
   const memberCount = member.guild.memberCount;
 
   channel.send(
-    `🐾 Bienvenue sur **や . Naya . lji** ${member} !\n` +
-    `Nous sommes maintenant **${memberCount}** membres !\n` +
-    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n` +
+    `🐾 Bienvenue sur **や . Naya . lji** ${member} ! ` +
+    `Nous sommes maintenant **${memberCount}** membres ! ` +
+    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> ` +
     `<@&1479358568091357234>`
   );
 });
@@ -67,7 +67,6 @@ client.on("messageCreate", async message => {
 
   // règlement
   if (msg === "!règlement") {
-
     const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
     if (!channel) return message.channel.send("Salon règlement introuvable");
 
@@ -109,12 +108,10 @@ Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime. P
 
 Merci de respecter ces règles pour assurer une bonne ambiance.
 `)
-      .setImage("https://tenor.com/kce8d7ekkCF.gif");
+      .setImage("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");  // ← Ton GIF kitty cat ici
 
     channel.send({ embeds: [embed] });
-
   }
-
 });
 
 client.login(process.env.DISCORD_TOKEN);

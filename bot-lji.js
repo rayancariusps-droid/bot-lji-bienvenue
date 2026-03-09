@@ -12,7 +12,7 @@ app.listen(PORT, () => {
 });
 
 // Discord
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 
 const client = new Client({
   intents: [
@@ -25,14 +25,15 @@ const client = new Client({
 
 // IDS
 const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1446702499082928158";  // ← ID corrigé : #『🎨』role
+const ROLES_CHANNEL_ID = "1446702499082928158";
+const REGLEMENT_CHANNEL_ID = "1441951191234908290";
 
 // Bot prêt
 client.on("ready", () => {
   console.log(`Connecté en tant que ${client.user.tag}`);
 });
 
-// Message de bienvenue (compact comme avant)
+// Message de bienvenue
 client.on("guildMemberAdd", async member => {
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
   if (!channel) return;
@@ -47,20 +48,73 @@ client.on("guildMemberAdd", async member => {
   );
 });
 
-// Commandes simples
+// Commandes
 client.on("messageCreate", async message => {
   if (message.author.bot) return;
 
   const msg = message.content.toLowerCase();
 
+  // ping
   if (msg === "!ping") {
     const sent = await message.channel.send("Pong");
     sent.edit(`Pong ${sent.createdTimestamp - message.createdTimestamp}ms`);
   }
 
+  // membres
   if (msg === "!membres") {
     message.channel.send(`Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`);
   }
+
+  // règlement
+  if (msg === "!règlement") {
+
+    const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
+    if (!channel) return message.channel.send("Salon règlement introuvable");
+
+    const embed = new EmbedBuilder()
+      .setTitle("Règlement du serveur :")
+      .setColor("#5865F2")
+      .setDescription(`
+Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime. Pour garantir une expérience agréable à tous, merci de respecter les règles suivantes :
+
+**1. Respect et bienveillance**
+
+• Aucun propos haineux, discriminatoire ou harcèlement ne sera toléré.  
+• Pas de conflits inutiles, restez courtois même en cas de désaccord.  
+• Respectez les avis et goûts de chacun.
+
+**2. Contenu approprié**
+
+• Aucune image, vidéo ou texte explicite, gore ou illégal.  
+• Utilisez les salons appropriés pour chaque type de contenu.  
+• Le spoil est interdit sans balise appropriée.
+
+**3. Convivialité et participation**
+
+• Participez activement et respectez les discussions en cours.  
+• Pas de spam, flood ou publicité non autorisée.  
+• Les pseudonymes et avatars doivent rester corrects et non offensants.
+
+**4. Utilisation des salons**
+
+• Lisez la description des salons avant de poster.  
+• Pas de hors-sujet excessif.  
+• Les commandes bots doivent être utilisées uniquement dans les salons dédiés.
+
+**5. Rôles et modération**
+
+• Suivez les instructions des modérateurs.  
+• En cas de problème, contactez un membre du staff.  
+• Les avertissements et sanctions sont à la discrétion de l’équipe de modération.
+
+Merci de respecter ces règles pour assurer une bonne ambiance.
+`)
+      .setImage("https://tenor.com/kce8d7ekkCF.gif");
+
+    channel.send({ embeds: [embed] });
+
+  }
+
 });
 
 client.login(process.env.DISCORD_TOKEN);

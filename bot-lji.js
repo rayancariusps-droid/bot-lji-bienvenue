@@ -25,7 +25,7 @@ const client = new Client({
 
 // IDS
 const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1446702499082928158";     // ← Salon #『🎨』role
+const ROLES_CHANNEL_ID = "1446702499082928158";
 const REGLEMENT_CHANNEL_ID = "1441951191234908290";
 
 // Bot prêt
@@ -33,7 +33,7 @@ client.on("ready", () => {
   console.log(`Connecté en tant que ${client.user.tag}`);
 });
 
-// Message de bienvenue (exactement comme tu voulais)
+// Message de bienvenue
 client.on("guildMemberAdd", async member => {
   const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
   if (!channel) return;
@@ -41,9 +41,9 @@ client.on("guildMemberAdd", async member => {
   const memberCount = member.guild.memberCount;
 
   channel.send(
-    `🐾 Bienvenue sur **や . Naya . lji** ${member} ! ` +
-    `Nous sommes maintenant **${memberCount}** membres ! ` +
-    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> ` +
+    `🐾 Bienvenue sur **や . Naya . lji** ${member} !\n` +
+    `Nous sommes maintenant **${memberCount}** membres !\n` +
+    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n` +
     `<@&1479358568091357234>`
   );
 });
@@ -107,10 +107,11 @@ Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime. P
 • Les avertissements et sanctions sont à la discrétion de l’équipe de modération.
 
 Merci de respecter ces règles pour assurer une bonne ambiance.
-`)
-      .setImage("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");  // ← Ton GIF kitty cat ici
+`);
 
-    channel.send({ embeds: [embed] });
+    channel.send({ embeds: [embed] }).then(() => {
+      channel.send("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");
+    });
   }
 });
 

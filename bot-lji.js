@@ -24,9 +24,9 @@ const client = new Client({
 });
 
 // IDS
-const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1483992171538550935"; // ✅ nouveau salon
-const REGLEMENT_CHANNEL_ID = "1441951191234908290";
+const WELCOME_CHANNEL_ID = "1483601884165181604"; // ✅ nouveau
+const ROLES_CHANNEL_ID = "1483992171538550935";   // salon rôle
+const REGLEMENT_CHANNEL_ID = "1483583968241651722"; // ✅ nouveau
 
 // Bot prêt
 client.on("ready", () => {
@@ -41,14 +41,14 @@ client.on("guildMemberAdd", async member => {
 
     const memberCount = member.guild.memberCount;
 
-    const welcomeMessage =
+    const message =
       `⛩️ Bienvenue sur ** Naya . lji** ${member} !\n` +
       `Nous sommes maintenant **${memberCount}** membres !\n` +
       `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n` +
       `<@&1479358568091357234>`;
 
     await channel.send({
-      content: welcomeMessage,
+      content: message,
       files: [
         "https://media1.tenor.com/m/YXjYxFaPVr0AAAAC/akame-ga-kill.gif"
       ]

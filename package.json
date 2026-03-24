@@ -1,12 +1,14 @@
 {
-  "name": "my-bot",
+  "name": "naya-lji-bot",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Bot Discord Naya LJI",
+  "main": "bot-lji.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node bot-lji.js"
   },
   "dependencies": {
     "discord.js": "^14.0.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2"
   }
 }

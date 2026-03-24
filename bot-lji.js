@@ -25,7 +25,7 @@ const client = new Client({
 
 // IDS
 const WELCOME_CHANNEL_ID = "1441916367942193233";
-const ROLES_CHANNEL_ID = "1446702499082928158";     // Salon #『🎨』role
+const ROLES_CHANNEL_ID = "1483992171538550935"; // ✅ nouveau salon
 const REGLEMENT_CHANNEL_ID = "1441951191234908290";
 
 // Bot prêt
@@ -35,17 +35,28 @@ client.on("ready", () => {
 
 // Message de bienvenue
 client.on("guildMemberAdd", async member => {
-  const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
-  if (!channel) return;
+  try {
+    const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
+    if (!channel) return;
 
-  const memberCount = member.guild.memberCount;
+    const memberCount = member.guild.memberCount;
 
-  channel.send(
-    `🐾 Bienvenue sur **や . Naya . lji** ${member} !\n` +
-    `Nous sommes maintenant **${memberCount}** membres !\n` +
-    `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n` +
-    `<@&1479358568091357234>`
-  );
+    const welcomeMessage =
+      `⛩️ Bienvenue sur ** Naya . lji** ${member} !\n` +
+      `Nous sommes maintenant **${memberCount}** membres !\n` +
+      `Prends tes rôles dans <#${ROLES_CHANNEL_ID}> \n` +
+      `<@&1479358568091357234>`;
+
+    await channel.send({
+      content: welcomeMessage,
+      files: [
+        "https://media1.tenor.com/m/YXjYxFaPVr0AAAAC/akame-ga-kill.gif"
+      ]
+    });
+
+  } catch (err) {
+    console.error("Erreur welcome:", err);
+  }
 });
 
 // Commandes
@@ -62,10 +73,12 @@ client.on("messageCreate", async message => {
 
   // membres
   if (msg === "!membres") {
-    message.channel.send(`Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`);
+    message.channel.send(
+      `Nous sommes actuellement ${message.guild.memberCount} membres sur le serveur`
+    );
   }
 
-  // règlement (avec GIF intégré grand)
+  // règlement
   if (msg === "!règlement") {
     const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
     if (!channel) return message.channel.send("Salon règlement introuvable");
@@ -108,7 +121,7 @@ Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime. P
 
 Merci de respecter ces règles pour assurer une bonne ambiance.
 `)
-      .setImage("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");  // ← Ton GIF ici
+      .setImage("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");
 
     channel.send({ embeds: [embed] });
   }

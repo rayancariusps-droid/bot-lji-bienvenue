@@ -91,33 +91,39 @@ client.on("messageCreate", async message => {
       .setTitle("Règlement du serveur :")
       .setColor("#5865F2")
       .setDescription(`
-Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime.
+Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime. Pour garantir une expérience agréable à tous, merci de respecter les règles suivantes :
 
 **1. Respect et bienveillance**
 • Aucun propos haineux, discriminatoire ou harcèlement ne sera toléré.  
+• Pas de conflits inutiles, restez courtois même en cas de désaccord.  
+• Respectez les avis et goûts de chacun.
 
 **2. Contenu approprié**
-• Aucune image ou contenu illégal.  
+• Aucune image, vidéo ou texte explicite, gore ou illégal.  
+• Utilisez les salons appropriés pour chaque type de contenu.  
+• Le spoil est interdit sans balise appropriée.
 
-**3. Convivialité**
-• Pas de spam ni publicité.  
+**3. Convivialité et participation**
+• Participez activement et respectez les discussions en cours.  
+• Pas de spam, flood ou publicité non autorisée.  
+• Les pseudonymes et avatars doivent rester corrects et non offensants.
 
-**4. Salons**
-• Respectez les catégories.  
+**4. Utilisation des salons**
+• Lisez la description des salons avant de poster.  
+• Pas de hors-sujet excessif.  
+• Les commandes bots doivent être utilisées uniquement dans les salons dédiés.
 
-**5. Modération**
-• Suivez les instructions du staff.
+**5. Rôles et modération**
+• Suivez les instructions des modérateurs.  
+• En cas de problème, contactez un membre du staff.  
+• Les avertissements et sanctions sont à la discrétion de l’équipe de modération.
 
-Merci de respecter ces règles 🙏
+Merci de respecter ces règles pour assurer une bonne ambiance.
+
+![GIF](https://media1.tenor.com/m/YXjYxFaPVr0AAAAC/akame-ga-kill.gif)
 `);
 
-    await channel.send({
-      content: "📜 Règlement du serveur ⬇️",
-      embeds: [embed],
-      files: [
-        "https://media1.tenor.com/m/YXjYxFaPVr0AAAAC/akame-ga-kill.gif"
-      ]
-    });
+    channel.send({ embeds: [embed] });
   }
 });
 

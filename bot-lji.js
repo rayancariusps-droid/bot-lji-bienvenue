@@ -24,9 +24,9 @@ const client = new Client({
 });
 
 // IDS
-const WELCOME_CHANNEL_ID = "1483601884165181604"; // ✅ nouveau
+const WELCOME_CHANNEL_ID = "1483601884165181604"; // nouveau salon bienvenue
 const ROLES_CHANNEL_ID = "1483992171538550935";   // salon rôle
-const REGLEMENT_CHANNEL_ID = "1483583968241651722"; // ✅ nouveau
+const REGLEMENT_CHANNEL_ID = "1483583968241651722"; // nouveau salon règlement
 
 // Bot prêt
 client.on("ready", () => {
@@ -120,10 +120,15 @@ Bienvenue sur **や . Naya . lji**, un espace dédié aux passionnés d'anime. P
 • Les avertissements et sanctions sont à la discrétion de l’équipe de modération.
 
 Merci de respecter ces règles pour assurer une bonne ambiance.
-`)
-      .setImage("https://media1.tenor.com/m/dN3xxpzFql8AAAAd/kitty-cat.gif");
+`);
 
-    channel.send({ embeds: [embed] });
+    // Envoi de l'embed + GIF à la fin du message
+    await channel.send({
+      embeds: [embed],
+      files: [
+        "https://media1.tenor.com/m/YXjYxFaPVr0AAAAC/akame-ga-kill.gif"
+      ]
+    });
   }
 });
 

@@ -40,7 +40,7 @@ const WELCOME_CHANNEL_ID = "1483601884165181604";   // Salon de bienvenue
 const ROLES_CHANNEL_ID = "1483992171538550935";     // Salon des rôles
 const STATUS_ROLE_ID = "1486974281073168495";       // Rôle pour le statut /Naya
 const BOOSTER_ROLE_ID = "1450116107061956800";      // Rôle Booster
-const ANNOUNCE_CHANNEL_ID = "ID_DU_SALON";          // Remplace par l'ID du salon pour !annonce
+const SUPPORT_CHANNEL_ID = "1483992232121077930";   // Salon soutien
 
 // =====================
 // READY
@@ -62,7 +62,7 @@ client.on("guildMemberAdd", async member => {
     const embed = new EmbedBuilder()
       .setTitle(`❄️ Bienvenue sur Naya ❄️`)
       .setDescription(`${member} nous rejoint !\nNous sommes maintenant **${memberCount}** membres !\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}> \n<@&1479358568091357234>\n\n💎 **Boosters** : si tu boost le serveur, tu recevras automatiquement le rôle <@&${BOOSTER_ROLE_ID}> !`)
-      .setColor("#00FFFF")
+      .setColor("#00BFFF") // bleu ciel
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .setFooter({ text: "Amuse-toi bien sur Naya ❄️" });
 
@@ -94,26 +94,57 @@ client.on("messageCreate", async message => {
     );
   }
 
-  // ANNONCE
-  if (msg === "!annonce") {
-    // Vérifie permission (optionnel)
+  // SOUTIEN
+  if (msg === "!soutien") {
     if (!message.member.permissions.has("ManageMessages")) {
-      return message.reply("❌ Tu n'as pas la permission d'envoyer une annonce !");
+      return message.reply("❌ Tu n'as pas la permission d'envoyer cette commande !");
     }
 
-    const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
+    const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
       .setTitle("❄️ _Tu souhaites soutenir Naya ? Parfait !_")
-      .setColor("#00FFFF")
+      .setColor("#00BFFF") // bleu ciel
       .setDescription(`
-- <:arrow:1480533393509847042> **Rôle Statut :** Mets **/Naya** dans ton statut ! Cela te donnera automatiquement le rôle <@&${STATUS_ROLE_ID}> et accès aux permissions images/stickers.  
+- <:arrow:1480533393509847042> **Rôle Statut :** Mets **/Naya** dans ton statut ! Cela te donnera automatiquement le rôle <@&${STATUS_ROLE_ID}> et accès aux permissions images/stickers.
 
 - <:arrow:1480533393509847042> **Boost :** En boostant le serveur, tu obtiendras le rôle <@&${BOOSTER_ROLE_ID}> ainsi que les permissions images.
 `)
+      .setImage("https://tenor.com/view/rukia-bankai-rukia-gif-16333760748106989164")
       .setFooter({ text: "Merci de soutenir Naya ❄️ !" });
 
     channel.send({ embeds: [embed] });
+  }
+
+  // REGLEMENT
+  if (msg === "!règlement") {
+    const embed = new EmbedBuilder()
+      .setTitle("📜 Règlement du serveur")
+      .setColor("#00BFFF") // bleu ciel
+      .setDescription(`
+Bienvenue sur **Naya ❄️**
+
+**1. Respect**
+• Pas d'insultes, haine ou harcèlement  
+• Restez respectueux  
+
+**2. Contenu**
+• Pas de NSFW, gore ou illégal  
+• Pas de spam ou pub  
+
+**3. Salons**
+• Respectez les thèmes  
+• Pas de hors-sujet  
+
+**4. Staff**
+• Écoutez les modérateurs  
+• Sanctions si nécessaire  
+
+Merci de garder une bonne ambiance 💙
+`)
+      .setImage("https://tenor.com/view/rukia-gif-13693155191483816736");
+
+    message.channel.send({ embeds: [embed] });
   }
 });
 
@@ -126,9 +157,8 @@ client.on("presenceUpdate", async (oldPresence, newPresence) => {
 
     const member = newPresence.member;
 
-    // Vérifie le statut personnalisé
     const activities = newPresence.activities;
-    const statutPerso = activities.find(act => act.type === 4)?.state; // type 4 = custom status
+    const statutPerso = activities.find(act => act.type === 4)?.state;
 
     if (statutPerso && statutPerso.includes("/Naya")) {
       if (!member.roles.cache.has(STATUS_ROLE_ID)) {

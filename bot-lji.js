@@ -60,7 +60,7 @@ client.on("guildMemberAdd", async (member) => {
     if (!channel || !channel.isTextBased()) return;
 
     const embed = new EmbedBuilder()
-      .setTitle("❄️ Bienvenue sur Naya ❄️")
+      .setTitle("Bienvenue sur Naya ❄️")
       .setColor("#00BFFF")
       .setDescription(`${member} rejoint le serveur !\nNous sommes maintenant **${member.guild.memberCount}** membres.\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}>`);
 
@@ -136,13 +136,13 @@ client.on("messageCreate", async (message) => {
       .setTitle("❄️ **Soutenir __Naya__**")
       .setColor("#00BFFF")
       .setDescription(`
-- <:arrow:1480533393509847042> Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\`  
+- Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\`  
 Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}> et profiter de certaines permissions spéciales
 
-- <:arrow:1480533393509847042> Tu peux aussi **booster le serveur**  
+- Tu peux aussi **booster le serveur**  
 En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supplémentaires
 
-- <:arrow:1480533393509847042> Si vous le souhaitez, vous pouvez ajouter le **tag du serveur**  
+- Si vous le souhaitez, vous pouvez ajouter le **tag du serveur**  
 Cela nous aidera à gagner en visibilité et à renforcer Naya 💙
 
 _ _  
@@ -226,7 +226,7 @@ Tu souhaites faire partie du staff de Naya ? Regarde les conditions ci-dessous
 ### Conditions
 > - Avoir minimum **15 ans**
 > - Avoir **3 invitations** minimum
-> - Avoir **500 messages** ou / et **5h** de voc
+> - Avoir **500 messages** ou **5h** de voc
 > - Avoir **/Naya** ou **gg.Naya** dans ton statut
 
 ### Comportement
@@ -240,6 +240,37 @@ _ _
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491691648411893780/17757173762299050023420614074528.gif");
 
     channel.send({ embeds: [embed] });
+  }
+
+  // ----- TICKETS -----
+  if (msg === "!tickets") {
+    const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
+    if (!channel || !channel.isTextBased()) return;
+
+    const embed = new EmbedBuilder()
+      .setTitle("💛 _Support Naya_")
+      .setColor("#FFA500") // orange
+      .setDescription(`
+👑・ **Ticket Couronne**  
+🔹 Tout ce qui est professionnel, échange de dm4ll, fournir chez nous etc…
+
+🛡️・ **Ticket Gestion Staff**  
+🔹 Devenir staff, questions relatives aux permissions, demander un rankup / derank etc…
+
+🚨・ **Ticket Gestion Abus**  
+🔹 Signaler quelqu’un, abus de permission, problème général…
+
+🎉・ **Ticket Animation**  
+🔹 Devenir animateur / animatrice, questions sur les animations…
+
+🤝・ **Ticket Partenariat**  
+🔹 Effectuer un partenariat, questions sur les partenariats…
+
+_Choisis la catégorie adaptée à ta demande pour ouvrir ton ticket_
+`)
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
+
+    await channel.send({ embeds: [embed] });
   }
 });
 

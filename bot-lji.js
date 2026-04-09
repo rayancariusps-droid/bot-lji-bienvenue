@@ -118,25 +118,41 @@ client.on("messageCreate", async message => {
       .setTitle("📜 Règlement du serveur")
       .setColor("#00BFFF")
       .setDescription(`
-Bienvenue sur **Naya ❄️**
+Bienvenue sur **Naya ❄️** !
+
+Afin de garantir une ambiance saine et agréable pour tous, merci de respecter les règles suivantes :
 
 **1. Respect**
-• Pas d'insultes, haine ou harcèlement  
-• Restez respectueux  
+• Pas d'insultes, propos haineux ou harcèlement envers quiconque  
+• Évitez le racisme, sexisme, homophobie ou toute forme de discrimination  
+• Soyez respectueux envers les membres et le staff
 
 **2. Contenu**
-• Pas de NSFW, gore ou illégal  
-• Pas de spam ou pub  
+• Pas de contenu NSFW, gore, piraté ou illégal  
+• Pas de spam ou publicité non autorisée  
+• Pas de liens suspects ou malveillants
 
 **3. Salons**
-• Respectez les thèmes  
-• Pas de hors-sujet  
+• Respectez les thèmes de chaque salon  
+• Les hors-sujets sont interdits  
+• Utilisez les salons appropriés pour les suggestions, jeux, discussions générales, etc.
 
-**4. Staff**
-• Écoutez les modérateurs  
-• Sanctions si nécessaire  
+**4. Staff et modération**
+• Écoutez les modérateurs et administrateurs  
+• Ne contestez pas publiquement une sanction, contactez un membre du staff en privé  
+• Les décisions du staff sont finales
 
-Merci de garder une bonne ambiance 💙
+**5. Sécurité**
+• Ne partagez pas vos informations personnelles  
+• Ne harcelez pas d’autres membres  
+• Signalez tout comportement suspect au staff
+
+**6. Activités du serveur**
+• Restez courtois dans les discussions et les jeux  
+• Respectez les limites des autres joueurs  
+• Encouragez une communauté positive
+
+Merci de suivre ces règles pour garantir un serveur agréable à tous. 💙
 `)
       .setImage("https://media.tenor.com/EkQdd6qCqjgAAAAd/rukia-bankai.gif");
 

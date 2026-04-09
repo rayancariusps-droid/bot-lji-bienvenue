@@ -17,15 +17,13 @@ const {
 // SERVEUR WEB
 // =====================
 const app = express();
-app.get("/", (req, res) => {
-  res.send("Bot Naya en ligne");
-});
+app.get("/", (req, res) => res.send("Bot Naya en ligne"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
 
 // =====================
-// DISCORD CLIENT
+// CLIENT DISCORD
 // =====================
 const client = new Client({
   intents: [
@@ -289,8 +287,8 @@ _Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
 // =====================
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.guild) return;
-
   const { guild, user } = interaction;
+
   const member = guild.members.cache.get(user.id);
 
   // ----- MENU DE SÉLECTION -----
@@ -305,11 +303,11 @@ client.on("interactionCreate", async (interaction) => {
 
     const channel = await guild.channels.create({
       name: ticketName,
-      type: 0,
+      type: 0, // GUILD_TEXT
       permissionOverwrites: [
         { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
         { id: user.id, allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"] },
-        { id: STATUS_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"] }
+        { id: TICKET_HANDLER_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"] }
       ]
     });
 

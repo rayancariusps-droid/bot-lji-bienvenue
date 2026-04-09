@@ -97,13 +97,13 @@ client.on("messageCreate", async message => {
       .setTitle("❄️ **Soutenir __Naya__**")
       .setColor("#00BFFF")
       .setDescription(`
-Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\` !  
-Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}>, et tu pourras profiter de certaines permissions spéciales.
+Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\`  
+Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}>, et tu pourras profiter de certaines permissions spéciales
 
-Tu peux aussi **booster le serveur** !  
-En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supplémentaires.
+Tu peux aussi **booster le serveur**  
+En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supplémentaires
 
-Enfin, si vous le souhaitez, vous pouvez ajouter le **tag du serveur** !  
+Enfin, si vous le souhaitez, vous pouvez ajouter le **tag du serveur**  
 Cela nous aidera à gagner en visibilité et à renforcer Naya 💙
 
 _ _  
@@ -180,14 +180,6 @@ async function checkStatus(member) {
     // AJOUT ROLE
     if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
       await member.roles.add(STATUS_ROLE_ID);
-
-      await member.send(`❄️ Salut ${member} !
-
-Merci beaucoup pour ton soutien ! En mettant **Naya** dans ton statut, tu aides le serveur à se faire connaître et à grandir 💙  
-On apprécie vraiment ton aide, tu es un vrai pilier du serveur ❄️✨
-
-Continue à briller et à profiter des permissions spéciales que tu as maintenant !`);
-
       console.log("Rôle ajouté à", member.user.tag);
     }
 

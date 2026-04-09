@@ -9,11 +9,15 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, StringSelectM
 // SERVEUR WEB
 // =====================
 const app = express();
+
 app.get("/", (req, res) => {
   res.send("Bot Naya en ligne");
 });
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
+app.listen(PORT, () => {
+  console.log("Serveur web actif sur le port " + PORT);
+});
 
 // =====================
 // DISCORD CLIENT
@@ -39,6 +43,7 @@ const SUPPORT_CHANNEL_ID = "1483992232121077930";
 const REGLEMENT_CHANNEL_ID = "1483583968241651722";
 const TICKET_CHANNEL_ID = "1483599648018006150";
 const RECRUTEMENT_CHANNEL_ID = "1491684338377687070";
+const TICKET_HANDLER_ROLE_ID = "1390086486291910726";
 
 // =====================
 // READY
@@ -56,7 +61,7 @@ client.on("guildMemberAdd", async (member) => {
     if (!channel || !channel.isTextBased()) return;
 
     const embed = new EmbedBuilder()
-      .setTitle("Bienvenue sur Naya")
+      .setTitle("Bienvenue sur Naya ❄️")
       .setColor("#00BFFF")
       .setDescription(`${member} rejoint le serveur !\nNous sommes maintenant **${member.guild.memberCount}** membres.\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}>`);
 
@@ -94,7 +99,6 @@ async function checkStatus(member) {
   }
 }
 
-// Vérification périodique
 setInterval(async () => {
   client.guilds.cache.forEach(async (guild) => {
     const members = await guild.members.fetch();
@@ -141,7 +145,7 @@ En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supp
 - Si vous le souhaitez, vous pouvez ajouter le **tag du serveur**  
 Cela nous aidera à gagner en visibilité et à renforcer Naya 💙
 
-_ _
+_ _  
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883249.gif");
 
@@ -187,7 +191,7 @@ _ _
 
 Merci de respecter ces règles pour une ambiance agréable 💙
 
-*Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)*
+Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)  
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
 
@@ -238,27 +242,28 @@ _ _
     channel.send({ embeds: [embed] });
   }
 
-  // ----- TICKET EMBED -----
+  // ----- TICKETS -----
   if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
+    if (!channel || !channel.isTextBased()) return;
+
     const embed = new EmbedBuilder()
-      .setTitle("Support Naya 🎟️")
+      .setTitle("Support Naya 🎫")
       .setColor("#FFA500")
       .setDescription(`
-👑 Bienvenue dans le **support** !  
-Choisis la catégorie adaptée à ta demande ci-dessous
+Bienvenue dans le **support** ! Choisis la catégorie adaptée à ta demande
 `)
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
 
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId("ticket_select")
-        .setPlaceholder("Choisir une option de ticket")
+        .setPlaceholder("Choisis une option")
         .addOptions([
           { label: "Tickets Gestion Staff", value: "ticket_staff" },
           { label: "Tickets Gestion Abus", value: "ticket_abus" },
           { label: "Tickets Animation", value: "ticket_animation" },
-          { label: "Tickets Partenariat", value: "ticket_partenaire" }
+          { label: "Tickets Partenariat", value: "ticket_partenariat" },
         ])
     );
 
@@ -267,38 +272,35 @@ Choisis la catégorie adaptée à ta demande ci-dessous
 });
 
 // =====================
-// INTERACTION TICKETS
+// INTERACTIONS TICKETS
 // =====================
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isStringSelectMenu()) return;
 
-  if (interaction.customId === "ticket_select") {
-    const category = interaction.values[0]; // Valeur choisie
-    const guild = interaction.guild;
-    const member = interaction.user;
+  const { values, user, guild } = interaction;
+  const category = values[0];
 
-    const ticketName = `ticket-${member.username}`.toLowerCase();
+  const ticketName = `ticket-${user.username.toLowerCase()}`;
+  const existingChannel = guild.channels.cache.find(c => c.name === ticketName);
 
-    // Vérifier si le ticket existe déjà
-    const existingChannel = guild.channels.cache.find(c => c.name === ticketName);
-    if (existingChannel) {
-      return interaction.reply({ content: `Tu as déjà un ticket ouvert : ${existingChannel}`, ephemeral: true });
-    }
-
-    // Créer le salon texte
-    const channel = await guild.channels.create({
-      name: ticketName,
-      type: 0, // GUILD_TEXT
-      permissionOverwrites: [
-        { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
-        { id: member.id, allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"] },
-        { id: STATUS_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"] }
-      ]
-    });
-
-    await channel.send(`Salut ${member}, ton ticket pour **${category.replace("ticket_", "")}** est ouvert !`);
-    await interaction.reply({ content: `Ton ticket a été créé : ${channel}`, ephemeral: true });
+  if (existingChannel) {
+    await interaction.reply({ content: "Vous avez déjà un ticket ouvert !", ephemeral: true });
+    return;
   }
+
+  const channel = await guild.channels.create({
+    name: ticketName,
+    type: 0,
+    parent: null,
+    permissionOverwrites: [
+      { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
+      { id: user.id, allow: ["ViewChannel", "SendMessages"] },
+      { id: TICKET_HANDLER_ROLE_ID, allow: ["ViewChannel", "SendMessages"] }
+    ]
+  });
+
+  await interaction.reply({ content: `Ticket créé : ${channel}`, ephemeral: true });
+  await channel.send(`Salut ${user}, ton ticket pour **${category.replace("ticket_", "")}** est ouvert !\n<@&${TICKET_HANDLER_ROLE_ID}> va le prendre en charge.`);
 });
 
 // =====================

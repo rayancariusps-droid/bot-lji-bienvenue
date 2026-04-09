@@ -36,11 +36,11 @@ const client = new Client({
 // =====================
 // IDS
 // =====================
-const WELCOME_CHANNEL_ID = "1483601884165181604";   // Salon de bienvenue
-const ROLES_CHANNEL_ID = "1483992171538550935";     // Salon des rôles
-const STATUS_ROLE_ID = "1486974281073168495";       // Rôle pour le statut /Naya
-const BOOSTER_ROLE_ID = "1450116107061956800";      // Rôle Booster
-const SUPPORT_CHANNEL_ID = "1483992232121077930";   // Salon soutien
+const WELCOME_CHANNEL_ID = "1483601884165181604";
+const ROLES_CHANNEL_ID = "1483992171538550935";
+const STATUS_ROLE_ID = "1486974281073168495";
+const BOOSTER_ROLE_ID = "1450116107061956800";
+const SUPPORT_CHANNEL_ID = "1483992232121077930";
 
 // =====================
 // READY
@@ -62,7 +62,7 @@ client.on("guildMemberAdd", async member => {
     const embed = new EmbedBuilder()
       .setTitle(`❄️ Bienvenue sur Naya ❄️`)
       .setDescription(`${member} nous rejoint !\nNous sommes maintenant **${memberCount}** membres !\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}> \n<@&1479358568091357234>\n\n💎 **Boosters** : si tu boost le serveur, tu recevras automatiquement le rôle <@&${BOOSTER_ROLE_ID}> !`)
-      .setColor("#00BFFF") // bleu ciel
+      .setColor("#00BFFF")
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .setFooter({ text: "Amuse-toi bien sur Naya ❄️" });
 
@@ -103,14 +103,14 @@ client.on("messageCreate", async message => {
     const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
-      .setTitle("❄️ _Tu souhaites soutenir Naya ? Parfait !_")
-      .setColor("#00BFFF") // bleu ciel
+      .setTitle("❄️ Tu souhaites soutenir Naya ? Parfait !")
+      .setColor("#00BFFF")
       .setDescription(`
-- <:arrow:1480533393509847042> **Rôle Statut :** Mets **/Naya** dans ton statut ! Cela te donnera automatiquement le rôle <@&${STATUS_ROLE_ID}> et accès aux permissions images/stickers.
+❄️ **Rôle Statut :** Mets **/Naya** dans ton statut ! Cela te donnera automatiquement le rôle <@&${STATUS_ROLE_ID}> et accès aux permissions images/stickers.
 
-- <:arrow:1480533393509847042> **Boost :** En boostant le serveur, tu obtiendras le rôle <@&${BOOSTER_ROLE_ID}> ainsi que les permissions images.
+❄️ **Boost :** En boostant le serveur, tu obtiendras le rôle <@&${BOOSTER_ROLE_ID}> ainsi que les permissions images.
 `)
-      .setImage("https://tenor.com/view/rukia-bankai-rukia-gif-16333760748106989164")
+      .setImage("https://media.tenor.com/4pWnI5KiQzgAAAAd/rukia-kuchiki-bleach-bankai.gif")
       .setFooter({ text: "Merci de soutenir Naya ❄️ !" });
 
     channel.send({ embeds: [embed] });
@@ -120,7 +120,7 @@ client.on("messageCreate", async message => {
   if (msg === "!règlement") {
     const embed = new EmbedBuilder()
       .setTitle("📜 Règlement du serveur")
-      .setColor("#00BFFF") // bleu ciel
+      .setColor("#00BFFF")
       .setDescription(`
 Bienvenue sur **Naya ❄️**
 
@@ -142,7 +142,7 @@ Bienvenue sur **Naya ❄️**
 
 Merci de garder une bonne ambiance 💙
 `)
-      .setImage("https://tenor.com/view/rukia-gif-13693155191483816736");
+      .setImage("https://media.tenor.com/EkQdd6qCqjgAAAAd/rukia-bankai.gif");
 
     message.channel.send({ embeds: [embed] });
   }

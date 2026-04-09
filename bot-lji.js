@@ -28,16 +28,19 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildPresences
   ]
 });
 
 // =====================
 // IDS
 // =====================
-const WELCOME_CHANNEL_ID = "1483601884165181604";
-const ROLES_CHANNEL_ID = "1483992171538550935";
-const REGLEMENT_CHANNEL_ID = "1483583968241651722";
+const WELCOME_CHANNEL_ID = "1483601884165181604";   // Salon de bienvenue
+const ROLES_CHANNEL_ID = "1483992171538550935";     // Salon des rôles
+const STATUS_ROLE_ID = "1486974281073168495";       // Rôle pour le statut /Naya
+const BOOSTER_ROLE_ID = "1450116107061956800";      // Rôle Booster
+const ANNOUNCE_CHANNEL_ID = "ID_DU_SALON";          // Remplace par l'ID du salon pour !annonce
 
 // =====================
 // READY
@@ -57,8 +60,8 @@ client.on("guildMemberAdd", async member => {
     const memberCount = member.guild.memberCount;
 
     const embed = new EmbedBuilder()
-      .setTitle(`❄️ Bienvenue sur Naya`)
-      .setDescription(`${member} nous rejoint !\nNous sommes maintenant **${memberCount}** membres !\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}> \n<@&1479358568091357234>`)
+      .setTitle(`❄️ Bienvenue sur Naya ❄️`)
+      .setDescription(`${member} nous rejoint !\nNous sommes maintenant **${memberCount}** membres !\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}> \n<@&1479358568091357234>\n\n💎 **Boosters** : si tu boost le serveur, tu recevras automatiquement le rôle <@&${BOOSTER_ROLE_ID}> !`)
       .setColor("#00FFFF")
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .setFooter({ text: "Amuse-toi bien sur Naya ❄️" });
@@ -86,59 +89,61 @@ client.on("messageCreate", async message => {
 
   // MEMBRES
   if (msg === "!membres") {
-    message.channel.send(
+    await message.channel.send(
       `👥 Nous sommes actuellement ${message.guild?.memberCount} membres sur **Naya ❄️**`
     );
   }
 
-  // RÈGLEMENT
-  if (msg === "!règlement") {
+  // ANNONCE
+  if (msg === "!annonce") {
+    // Vérifie permission (optionnel)
+    if (!message.member.permissions.has("ManageMessages")) {
+      return message.reply("❌ Tu n'as pas la permission d'envoyer une annonce !");
+    }
+
+    const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
+
     const embed = new EmbedBuilder()
-      .setTitle("📜 Règlement complet du serveur Naya ❄️")
-      .setColor("#5865F2")
+      .setTitle("❄️ _Tu souhaites soutenir Naya ? Parfait !_")
+      .setColor("#00FFFF")
       .setDescription(`
-Bienvenue sur **Naya ❄️** ! Merci de lire attentivement le règlement pour profiter pleinement du serveur.
+- <:arrow:1480533393509847042> **Rôle Statut :** Mets **/Naya** dans ton statut ! Cela te donnera automatiquement le rôle <@&${STATUS_ROLE_ID}> et accès aux permissions images/stickers.  
 
-**1. Respect**
-• Pas d'insultes, propos haineux ou harcèlement  
-• Évitez le trolling ou les conflits inutiles  
-• Respectez toutes les communautés et origines  
-
-**2. Contenu**
-• Pas de NSFW, gore ou contenu illégal  
-• Pas de spam, flood ou publicité sans autorisation  
-• Partagez du contenu pertinent et sûr pour tous  
-
-**3. Salons**
-• Respectez le thème de chaque salon  
-• Pas de hors-sujet répété  
-• Les salons vocaux sont soumis aux mêmes règles de respect et de contenu  
-
-**4. Staff**
-• Écoutez les modérateurs et administrateurs  
-• Toute contestation doit se faire en privé et poliment  
-• Sanctions appliquées en cas de non-respect  
-
-**5. Sécurité et vie privée**
-• Ne partagez jamais vos informations personnelles  
-• Ne harcelez ou n'espionnez pas d'autres membres  
-• Signalez tout comportement suspect au staff  
-
-**6. Publicité et promotions**
-• Toute publicité doit être autorisée par le staff  
-• Les liens suspects ou dangereux sont interdits  
-• Les bots et serveurs externes doivent être approuvés avant partage  
-
-**7. Sanctions**
-• Avertissement verbal ou écrit  
-• Mute temporaire  
-• Kick ou ban en cas de récidive ou comportement grave  
-
-Merci de contribuer à une **communauté saine et respectueuse** 💙
+- <:arrow:1480533393509847042> **Boost :** En boostant le serveur, tu obtiendras le rôle <@&${BOOSTER_ROLE_ID}> ainsi que les permissions images.
 `)
-      .setImage("https://media.tenor.com/Wj3A0g6Ol9EAAAAC/bleach-rukia.gif");
+      .setFooter({ text: "Merci de soutenir Naya ❄️ !" });
 
-    message.channel.send({ embeds: [embed] });
+    channel.send({ embeds: [embed] });
+  }
+});
+
+// =====================
+// ROLE STATUT / NAYA
+// =====================
+client.on("presenceUpdate", async (oldPresence, newPresence) => {
+  try {
+    if (!newPresence || !newPresence.member) return;
+
+    const member = newPresence.member;
+
+    // Vérifie le statut personnalisé
+    const activities = newPresence.activities;
+    const statutPerso = activities.find(act => act.type === 4)?.state; // type 4 = custom status
+
+    if (statutPerso && statutPerso.includes("/Naya")) {
+      if (!member.roles.cache.has(STATUS_ROLE_ID)) {
+        await member.roles.add(STATUS_ROLE_ID);
+        console.log(`Rôle ajouté à ${member.user.tag} pour le statut Naya`);
+      }
+    } else {
+      if (member.roles.cache.has(STATUS_ROLE_ID)) {
+        await member.roles.remove(STATUS_ROLE_ID);
+        console.log(`Rôle retiré à ${member.user.tag} car statut changé`);
+      }
+    }
+
+  } catch (err) {
+    console.error("Erreur statut → rôle :", err);
   }
 });
 

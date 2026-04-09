@@ -4,7 +4,7 @@
 require("dotenv").config();
 
 // =====================
-// SERVEUR WEB (ANTI-OFF)
+// SERVEUR WEB
 // =====================
 const express = require("express");
 const app = express();
@@ -51,24 +51,19 @@ client.once("ready", () => {
 });
 
 // =====================
-// WELCOME SYSTEM
+// WELCOME
 // =====================
 client.on("guildMemberAdd", async member => {
   try {
     const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
     if (!channel || !channel.isTextBased()) return;
 
-    const memberCount = member.guild.memberCount;
-
     const embed = new EmbedBuilder()
-      .setTitle(`❄️ Bienvenue sur Naya ❄️`)
-      .setDescription(`${member} nous rejoint !\nNous sommes maintenant **${memberCount}** membres !\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}> \n<@&1479358568091357234>\n\n💎 **Boosters** : si tu boost le serveur, tu recevras automatiquement le rôle <@&${BOOSTER_ROLE_ID}> !`)
+      .setTitle("❄️ Bienvenue sur Naya ❄️")
       .setColor("#00BFFF")
-      .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-      .setFooter({ text: "Amuse-toi bien sur Naya ❄️" });
+      .setDescription(`${member} rejoint le serveur !\nNous sommes maintenant **${member.guild.memberCount}** membres.\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}>`);
 
     await channel.send({ embeds: [embed] });
-
   } catch (err) {
     console.error("Erreur welcome:", err);
   }
@@ -85,14 +80,12 @@ client.on("messageCreate", async message => {
   // PING
   if (msg === "!ping") {
     const sent = await message.channel.send("Pong");
-    sent.edit(`🏓 Pong : ${sent.createdTimestamp - message.createdTimestamp}ms`);
+    await sent.edit(`🏓 ${sent.createdTimestamp - message.createdTimestamp}ms`);
   }
 
   // MEMBRES
   if (msg === "!membres") {
-    message.channel.send(
-      `👥 Nous sommes actuellement ${message.guild?.memberCount} membres sur **Naya ❄️**`
-    );
+    await message.channel.send(`👥 ${message.guild.memberCount} membres sur Naya ❄️`);
   }
 
   // SOUTIEN
@@ -100,101 +93,121 @@ client.on("messageCreate", async message => {
     const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
-      .setTitle("❄️ Tu souhaites soutenir Naya ? Parfait !")
+      .setTitle("❄️ Soutenir Naya")
       .setColor("#00BFFF")
       .setDescription(`
-❄️ **Rôle Statut :** Mets **/Naya** dans ton statut ! Cela te donnera automatiquement le rôle <@&${STATUS_ROLE_ID}> et accès aux permissions images/stickers.
+❄️ Mets **/Naya** dans ton statut → rôle automatique <@&${STATUS_ROLE_ID}>
 
-❄️ **Boost :** En boostant le serveur, tu obtiendras le rôle <@&${BOOSTER_ROLE_ID}> ainsi que les permissions images.
+❄️ Boost le serveur → rôle <@&${BOOSTER_ROLE_ID}>
+
+❄️ Si vous le souhaitez, vous pouvez aussi ajouter le **tag du serveur** !  
+Cela nous aide à gagner en visibilité et à renforcer Naya 💙
 `)
-      .setImage("https://images-ext-1.discordapp.net/external/FlTHHTu_Rr82xhC8FFd9q3HqKx3qc6G42CJPW1UZTcQ/https/media.tenor.com/Xl5nTgBuzaIAAAPo/rukia-kuchiki.mp4")
-      .setFooter({ text: "Merci de soutenir Naya ❄️ !" });
+      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883418183249.gif");
 
-    channel.send({ embeds: [embed] });
+    await channel.send({ embeds: [embed] });
   }
 
   // REGLEMENT
   if (msg === "!règlement") {
     const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
-    if (!channel) return message.channel.send("Salon règlement introuvable");
+    if (!channel) return;
 
     const embed = new EmbedBuilder()
-      .setTitle("📜 Règlement du serveur")
+      .setTitle("📜 **RÈGLEMENT NAYA**")
       .setColor("#00BFFF")
       .setDescription(`
-Bienvenue sur **Naya ❄️** !
+🔹 [Discord Terms of Service](https://discord.com/terms)  
+🔹 [Discord Community Guidelines](https://discord.com/guidelines)  
+🔹 [Discord Safety Center](https://discord.com/safety)
 
-Afin de garantir une ambiance saine et agréable pour tous, merci de respecter les règles suivantes :
+---
 
-**1. Respect**
-• Pas d'insultes, propos haineux ou harcèlement envers quiconque  
-• Évitez le racisme, sexisme, homophobie ou toute forme de discrimination  
-• Soyez respectueux envers les membres et le staff
+**1. Respect et bienveillance**  
+• Pas d’insultes, harcèlement ou discrimination  
+• Restez courtois même en cas de désaccord  
+• Respectez les avis et goûts de chacun  
+• Aidez les nouveaux membres à se sentir bienvenus  
 
-**2. Contenu**
-• Pas de contenu NSFW, gore, piraté ou illégal  
+**2. Contenu**  
+• Pas de NSFW / gore / contenu illégal  
 • Pas de spam ou publicité non autorisée  
-• Pas de liens suspects ou malveillants
+• Les spoilers doivent être signalés avec la balise appropriée  
+• Partagez des contenus pertinents pour chaque salon  
 
-**3. Salons**
-• Respectez les thèmes de chaque salon  
-• Les hors-sujets sont interdits  
-• Utilisez les salons appropriés pour les suggestions, jeux, discussions générales, etc.
+**3. Salons**  
+• Respectez le thème de chaque salon  
+• Pas de hors-sujet excessif  
+• Utilisez les fils de discussion si nécessaire  
 
-**4. Staff et modération**
+**4. Staff et modération**  
 • Écoutez les modérateurs et administrateurs  
-• Ne contestez pas publiquement une sanction, contactez un membre du staff en privé  
-• Les décisions du staff sont finales
+• Les avertissements et sanctions sont à la discrétion de l’équipe  
+• Ne contestez pas publiquement les décisions du staff  
 
-**5. Sécurité**
-• Ne partagez pas vos informations personnelles  
-• Ne harcelez pas d’autres membres  
-• Signalez tout comportement suspect au staff
+**5. Ambiance**  
+• Favorisez les échanges positifs et constructifs  
+• Encouragez les autres membres et participez activement  
 
-**6. Activités du serveur**
-• Restez courtois dans les discussions et les jeux  
-• Respectez les limites des autres joueurs  
-• Encouragez une communauté positive
-
-Merci de suivre ces règles pour garantir un serveur agréable à tous. 💙
+Merci de respecter ces règles afin de garder une ambiance saine et agréable pour tous 💙
 `)
-      .setImage("https://images-ext-1.discordapp.net/external/DTOcEwPhS6h5bHmXnBZAajFzzpBDWYi9Jnuv3fiQHTw/https/media.tenor.com/0MR_BdLdEokAAAPo/rukia-kuchiki-bleach.mp4");
+      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
 
     channel.send({ embeds: [embed] });
   }
 });
 
 // =====================
-// ROLE STATUT / NAYA
+// SYSTEME STATUT OP
 // =====================
-client.on("presenceUpdate", async (oldPresence, newPresence) => {
+async function checkStatus(member) {
   try {
-    if (!newPresence || !newPresence.member) return;
+    const presence = member.presence;
+    if (!presence) return;
 
-    const member = newPresence.member;
+    const customStatus = presence.activities.find(a => a.type === 4);
+    const hasStatus = customStatus && customStatus.state && customStatus.state.includes("/Naya");
 
-    const activities = newPresence.activities;
-    const statutPerso = activities.find(act => act.type === 4)?.state;
+    // AJOUT ROLE
+    if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
+      await member.roles.add(STATUS_ROLE_ID);
 
-    if (statutPerso && statutPerso.includes("/Naya")) {
-      if (!member.roles.cache.has(STATUS_ROLE_ID)) {
-        await member.roles.add(STATUS_ROLE_ID);
-        console.log(`Rôle ajouté à ${member.user.tag} pour le statut Naya`);
-      }
-    } else {
-      if (member.roles.cache.has(STATUS_ROLE_ID)) {
-        await member.roles.remove(STATUS_ROLE_ID);
-        console.log(`Rôle retiré à ${member.user.tag} car statut changé`);
-      }
+      await member.send(`❄️ Merci ${member} !
+
+Tu aides énormément **Naya** à se faire connaître 💙  
+Continue comme ça, t’es un vrai ❄️ !`);
+
+      console.log("Rôle ajouté à", member.user.tag);
+    }
+
+    // RETRAIT ROLE
+    if (!hasStatus && member.roles.cache.has(STATUS_ROLE_ID)) {
+      await member.roles.remove(STATUS_ROLE_ID);
+      console.log("Rôle retiré à", member.user.tag);
     }
 
   } catch (err) {
-    console.error("Erreur statut → rôle :", err);
+    console.error("Erreur statut:", err);
   }
+}
+
+// EVENT
+client.on("presenceUpdate", (oldPresence, newPresence) => {
+  if (!newPresence || !newPresence.member) return;
+  checkStatus(newPresence.member);
 });
+
+// SCAN AUTO (ANTI BUG DISCORD)
+setInterval(async () => {
+  client.guilds.cache.forEach(async guild => {
+    const members = await guild.members.fetch();
+    members.forEach(member => {
+      checkStatus(member);
+    });
+  });
+}, 30000);
 
 // =====================
 // LOGIN
 // =====================
-client.login(process.env.DISCORD_TOKEN)
-  .catch(err => console.error("Erreur connexion bot :", err));
+client.login(process.env.DISCORD_TOKEN);

@@ -97,7 +97,7 @@ client.on("messageCreate", async message => {
       .setTitle("❄️ **Soutenir __Naya__**")
       .setColor("#00BFFF")
       .setDescription(`
-Commence par ajouter dans ton **statut** \`/Naya\` !  
+Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\` !  
 Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}>, et tu pourras profiter de certaines permissions spéciales.
 
 Tu peux aussi **booster le serveur** !  
@@ -165,7 +165,7 @@ Merci de respecter ces règles afin de garder une ambiance saine et agréable po
 });
 
 // =====================
-// SYSTEME STATUT OP
+// STATUT OP
 // =====================
 async function checkStatus(member) {
   try {
@@ -173,16 +173,20 @@ async function checkStatus(member) {
     if (!presence) return;
 
     const customStatus = presence.activities.find(a => a.type === 4);
-    const hasStatus = customStatus && customStatus.state && customStatus.state.includes("/Naya");
+    const statusText = customStatus && customStatus.state ? customStatus.state.toLowerCase() : "";
+
+    const hasStatus = statusText.includes("/naya") || statusText.includes("gg.naya");
 
     // AJOUT ROLE
     if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
       await member.roles.add(STATUS_ROLE_ID);
 
-      await member.send(`❄️ Merci ${member} !
+      await member.send(`❄️ Salut ${member} !
 
-Tu aides énormément **Naya** à se faire connaître 💙  
-Continue comme ça, t’es un vrai ❄️ !`);
+Merci beaucoup pour ton soutien ! En mettant **Naya** dans ton statut, tu aides le serveur à se faire connaître et à grandir 💙  
+On apprécie vraiment ton aide, tu es un vrai pilier du serveur ❄️✨
+
+Continue à briller et à profiter des permissions spéciales que tu as maintenant !`);
 
       console.log("Rôle ajouté à", member.user.tag);
     }
@@ -198,13 +202,11 @@ Continue comme ça, t’es un vrai ❄️ !`);
   }
 }
 
-// EVENT
 client.on("presenceUpdate", (oldPresence, newPresence) => {
   if (!newPresence || !newPresence.member) return;
   checkStatus(newPresence.member);
 });
 
-// SCAN AUTO (ANTI BUG DISCORD)
 setInterval(async () => {
   client.guilds.cache.forEach(async guild => {
     const members = await guild.members.fetch();

@@ -2,15 +2,16 @@
 // CONFIG
 // =====================
 require("dotenv").config();
+const express = require("express");
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 
 // =====================
 // SERVEUR WEB
 // =====================
-const express = require("express");
 const app = express();
 
 app.get("/", (req, res) => {
-  res.send("Bot Naya ❄️ en ligne");
+  res.send("Bot Naya en ligne");
 });
 
 const PORT = process.env.PORT || 3000;
@@ -19,10 +20,8 @@ app.listen(PORT, () => {
 });
 
 // =====================
-// DISCORD
+// DISCORD CLIENT
 // =====================
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
-
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -34,7 +33,7 @@ const client = new Client({
 });
 
 // =====================
-// IDS
+// IDS DES SALONS ET RÔLES
 // =====================
 const WELCOME_CHANNEL_ID = "1483601884165181604";
 const ROLES_CHANNEL_ID = "1483992171538550935";
@@ -55,7 +54,7 @@ client.once("ready", () => {
 // =====================
 // WELCOME
 // =====================
-client.on("guildMemberAdd", async member => {
+client.on("guildMemberAdd", async (member) => {
   try {
     const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
     if (!channel || !channel.isTextBased()) return;
@@ -72,48 +71,88 @@ client.on("guildMemberAdd", async member => {
 });
 
 // =====================
+// CHECK STATUT /NAYA
+// =====================
+async function checkStatus(member) {
+  try {
+    const presence = member.presence;
+    if (!presence) return;
+
+    const customStatus = presence.activities.find(a => a.type === 4);
+    const statusText = customStatus && customStatus.state ? customStatus.state.toLowerCase() : "";
+
+    const hasStatus = statusText.includes("/naya") || statusText.includes("gg.naya");
+
+    if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
+      await member.roles.add(STATUS_ROLE_ID);
+      console.log("Rôle ajouté à", member.user.tag);
+    }
+
+    if (!hasStatus && member.roles.cache.has(STATUS_ROLE_ID)) {
+      await member.roles.remove(STATUS_ROLE_ID);
+      console.log("Rôle retiré à", member.user.tag);
+    }
+
+  } catch (err) {
+    console.error("Erreur statut:", err);
+  }
+}
+
+// Vérification périodique
+setInterval(async () => {
+  client.guilds.cache.forEach(async (guild) => {
+    const members = await guild.members.fetch();
+    members.forEach(member => checkStatus(member));
+  });
+}, 30000);
+
+client.on("presenceUpdate", (oldPresence, newPresence) => {
+  if (!newPresence || !newPresence.member) return;
+  checkStatus(newPresence.member);
+});
+
+// =====================
 // COMMANDES
 // =====================
-client.on("messageCreate", async message => {
+client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   const msg = message.content.toLowerCase();
 
-  // PING
+  // ----- PING -----
   if (msg === "!ping") {
     const sent = await message.channel.send("Pong");
     await sent.edit(`🏓 ${sent.createdTimestamp - message.createdTimestamp}ms`);
   }
 
-  // MEMBRES
+  // ----- MEMBRES -----
   if (msg === "!membres") {
-    await message.channel.send(`👥 ${message.guild.memberCount} membres sur Naya ❄️`);
+    await message.channel.send(`👥 Nous sommes actuellement ${message.guild.memberCount} membres sur Naya ❄️`);
   }
 
-  // SOUTIEN
+  // ----- SOUTIEN -----
   if (msg === "!soutien") {
     const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
-
     const embed = new EmbedBuilder()
       .setTitle("❄️ **Soutenir __Naya__**")
       .setColor("#00BFFF")
       .setDescription(`
-Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\`  
-Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}> et tu pourras profiter de certaines permissions spéciales
+- <:arrow:1480533393509847042> Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\`  
+Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}> et profiter de certaines permissions spéciales
 
-Tu peux aussi **booster le serveur**  
+- <:arrow:1480533393509847042> Tu peux aussi **booster le serveur**  
 En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supplémentaires
 
-Enfin, si vous le souhaitez, vous pouvez ajouter le **tag du serveur**  
+- <:arrow:1480533393509847042> Si vous le souhaitez, vous pouvez ajouter le **tag du serveur**  
 Cela nous aidera à gagner en visibilité et à renforcer Naya 💙
 
 _ _  
 `)
-      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883418183249.gif");
+      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883249.gif");
 
     await channel.send({ embeds: [embed] });
   }
 
-  // REGLEMENT
+  // ----- REGLEMENT -----
   if (msg === "!règlement") {
     const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
     if (!channel) return;
@@ -150,10 +189,6 @@ _ _
 • Les avertissements et sanctions sont à la discrétion de l’équipe  
 • Ne contestez pas publiquement les décisions du staff  
 
-**5. Ambiance**  
-• Favorisez les échanges positifs et constructifs  
-• Encouragez les autres membres et participez activement  
-
 Merci de respecter ces règles pour une ambiance agréable 💙
 
 *Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)*
@@ -163,80 +198,50 @@ Merci de respecter ces règles pour une ambiance agréable 💙
     channel.send({ embeds: [embed] });
   }
 
-  // RECRUTEMENT
+  // ----- RECRUTEMENT -----
   if (msg === "!recrutement") {
     const channel = await client.channels.fetch(RECRUTEMENT_CHANNEL_ID);
     if (!channel || !channel.isTextBased()) return;
 
+    // Vérifier le nombre d'invitations
+    const invites = await message.guild.invites.fetch();
+    let userInvites = 0;
+    invites.forEach(invite => {
+      if (invite.inviter && invite.inviter.id === message.author.id) {
+        userInvites += invite.uses;
+      }
+    });
+
+    if (userInvites < 3) {
+      return message.channel.send(`❌ Désolé ${message.author}, tu dois avoir **au moins 3 invitations** pour postuler au staff.`);
+    }
+
+    // Si OK, afficher le recrutement
     const embed = new EmbedBuilder()
-      .setTitle("## Recrutement Staff <a:h_blue3:1481347003563905199>")
+      .setTitle("Recrutement Staff")
       .setColor("#00BFFF")
       .setDescription(`
-Tu souhaites faire partie du staff de Naya ? Regarde les conditions ci-dessous !_!_ <a:h_02:1480981031648759810>
+Tu souhaites faire partie du staff de Naya ? Regarde les conditions ci-dessous
 
-### - L__e__s C__ondition__s
+### Conditions
 > - Avoir minimum **15 ans**
-> - Avoir **1** invitation **minimum**
-> - Avoir **500 messages** **ou** / **et** **5h** de **voc**
+> - Avoir **3 invitations** minimum
+> - Avoir **500 messages** ou / et **5h** de voc
 > - Avoir **/Naya** ou **gg.Naya** dans ton statut
 
-### - L__e__ C__omportemen__t
-> - Être **respectueux** et un minimum **gentil** envers tout le monde
-> - Savoir **garder son calme**
-> - Être **patient** et **rigoureux**
+### Comportement
+> - Être respectueux et un minimum gentil envers tout le monde
+> - Savoir garder son calme
+> - Être patient et rigoureux
 
-<a:A_arrow2:1481344782746779770> **Tu respectes les conditions ?** Ouvre un ticket Gestion Staff dans <#${TICKET_CHANNEL_ID}>  
-
-_Hâte de te revoir !_ <a:127actbluehearts:1480983686693261362>
-`);
+Tu respectes les conditions ? Ouvre un ticket Gestion Staff dans <#${TICKET_CHANNEL_ID}>  
+_ _  
+`)
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491691648411893780/17757173762299050023420614074528.gif");
 
     channel.send({ embeds: [embed] });
   }
 });
-
-// =====================
-// STATUT OP
-// =====================
-async function checkStatus(member) {
-  try {
-    const presence = member.presence;
-    if (!presence) return;
-
-    const customStatus = presence.activities.find(a => a.type === 4);
-    const statusText = customStatus && customStatus.state ? customStatus.state.toLowerCase() : "";
-
-    const hasStatus = statusText.includes("/naya") || statusText.includes("gg.naya");
-
-    // AJOUT ROLE
-    if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
-      await member.roles.add(STATUS_ROLE_ID);
-      console.log("Rôle ajouté à", member.user.tag);
-    }
-
-    // RETRAIT ROLE
-    if (!hasStatus && member.roles.cache.has(STATUS_ROLE_ID)) {
-      await member.roles.remove(STATUS_ROLE_ID);
-      console.log("Rôle retiré à", member.user.tag);
-    }
-
-  } catch (err) {
-    console.error("Erreur statut:", err);
-  }
-}
-
-client.on("presenceUpdate", (oldPresence, newPresence) => {
-  if (!newPresence || !newPresence.member) return;
-  checkStatus(newPresence.member);
-});
-
-setInterval(async () => {
-  client.guilds.cache.forEach(async guild => {
-    const members = await guild.members.fetch();
-    members.forEach(member => {
-      checkStatus(member);
-    });
-  });
-}, 30000);
 
 // =====================
 // LOGIN

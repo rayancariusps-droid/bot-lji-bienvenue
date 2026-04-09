@@ -43,6 +43,7 @@ const BOOSTER_ROLE_ID = "1450116107061956800";
 const SUPPORT_CHANNEL_ID = "1483992232121077930";
 const REGLEMENT_CHANNEL_ID = "1483583968241651722";
 const TICKET_CHANNEL_ID = "1483599648018006150";
+const RECRUTEMENT_CHANNEL_ID = "1491684338377687070";
 
 // =====================
 // READY
@@ -75,7 +76,6 @@ client.on("guildMemberAdd", async member => {
 // =====================
 client.on("messageCreate", async message => {
   if (message.author.bot) return;
-
   const msg = message.content.toLowerCase();
 
   // PING
@@ -98,7 +98,7 @@ client.on("messageCreate", async message => {
       .setColor("#00BFFF")
       .setDescription(`
 Commence par ajouter dans ton **statut** \`/Naya\` ou \`gg.Naya\`  
-Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}>, et tu pourras profiter de certaines permissions spéciales
+Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}> et tu pourras profiter de certaines permissions spéciales
 
 Tu peux aussi **booster le serveur**  
 En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supplémentaires
@@ -154,11 +154,41 @@ _ _
 • Favorisez les échanges positifs et constructifs  
 • Encouragez les autres membres et participez activement  
 
-Merci de respecter ces règles afin de garder une ambiance saine et agréable pour tous 💙
+Merci de respecter ces règles pour une ambiance agréable 💙
 
 *Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)*
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
+
+    channel.send({ embeds: [embed] });
+  }
+
+  // RECRUTEMENT
+  if (msg === "!recrutement") {
+    const channel = await client.channels.fetch(RECRUTEMENT_CHANNEL_ID);
+    if (!channel || !channel.isTextBased()) return;
+
+    const embed = new EmbedBuilder()
+      .setTitle("## Recrutement Staff <a:h_blue3:1481347003563905199>")
+      .setColor("#00BFFF")
+      .setDescription(`
+Tu souhaites faire partie du staff de Naya ? Regarde les conditions ci-dessous !_!_ <a:h_02:1480981031648759810>
+
+### - L__e__s C__ondition__s
+> - Avoir minimum **15 ans**
+> - Avoir **1** invitation **minimum**
+> - Avoir **500 messages** **ou** / **et** **5h** de **voc**
+> - Avoir **/Naya** ou **gg.Naya** dans ton statut
+
+### - L__e__ C__omportemen__t
+> - Être **respectueux** et un minimum **gentil** envers tout le monde
+> - Savoir **garder son calme**
+> - Être **patient** et **rigoureux**
+
+<a:A_arrow2:1481344782746779770> **Tu respectes les conditions ?** Ouvre un ticket Gestion Staff dans <#${TICKET_CHANNEL_ID}>  
+
+_Hâte de te revoir !_ <a:127actbluehearts:1480983686693261362>
+`);
 
     channel.send({ embeds: [embed] });
   }

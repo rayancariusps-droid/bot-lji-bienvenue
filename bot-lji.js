@@ -8,8 +8,13 @@ const {
   GatewayIntentBits, 
   EmbedBuilder, 
   ActionRowBuilder, 
-  StringSelectMenuBuilder, 
-  ChannelType 
+  StringSelectMenuBuilder,
+  ChannelType,
+  ButtonBuilder,
+  ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle
 } = require("discord.js");
 
 // =====================
@@ -224,47 +229,99 @@ _Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
 });
 
 // =====================
-// INTERACTIONS TICKETS
+// INTERACTIONS TICKETS + FERMETURE
 // =====================
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isStringSelectMenu()) return;
+  // -----------------
+  // Sélection de ticket
+  // -----------------
+  if (interaction.isStringSelectMenu()) {
+    const { values, user, guild } = interaction;
+    const category = values[0];
 
-  const { values, user, guild } = interaction;
-  const category = values[0];
+    const nameMap = {
+      ticket_staff: "gestion-staff",
+      ticket_abus: "gestion-abus",
+      ticket_couronne: "couronne",
+      ticket_animation: "animation",
+      ticket_partenariat: "partenariat"
+    };
+    const ticketName = `${nameMap[category]}-${user.username.toLowerCase()}`;
 
-  const nameMap = {
-    ticket_staff: "gestion-staff",
-    ticket_abus: "gestion-abus",
-    ticket_couronne: "couronne",
-    ticket_animation: "animation",
-    ticket_partenariat: "partenariat"
-  };
-  const ticketName = `${nameMap[category]}-${user.username.toLowerCase()}`;
+    const existingChannel = guild.channels.cache.find(c => c.name === ticketName);
+    if (existingChannel) {
+      return interaction.reply({ content: "Vous avez déjà un ticket ouvert !", ephemeral: true });
+    }
 
-  const existingChannel = guild.channels.cache.find(c => c.name === ticketName);
-  if (existingChannel) {
-    return interaction.reply({ content: "Vous avez déjà un ticket ouvert !", ephemeral: true });
+    const channel = await guild.channels.create({
+      name: ticketName,
+      type: ChannelType.GuildText,
+      permissionOverwrites: [
+        { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
+        { id: user.id, allow: ["ViewChannel", "SendMessages"] },
+        { id: TICKET_HANDLER_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ManageChannels"] }
+      ]
+    });
+
+    // Message de bienvenue **simple** avec ping roles
+    await channel.send({
+      content: `Salut ${user}, ton ticket pour **${category.replace("ticket_", "")}** est ouvert ! <@&${TICKET_HANDLER_ROLE_ID}>`,
+      components: [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("close_ticket")
+            .setLabel("Fermer le ticket")
+            .setStyle(ButtonStyle.Danger)
+        )
+      ]
+    });
+
+    await interaction.reply({ content: `Ticket créé : ${channel}`, ephemeral: true });
   }
 
-  const channel = await guild.channels.create({
-    name: ticketName,
-    type: ChannelType.GuildText,
-    permissionOverwrites: [
-      { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
-      { id: user.id, allow: ["ViewChannel", "SendMessages"] },
-      { id: TICKET_HANDLER_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ManageChannels"] }
-    ]
-  });
+  // -----------------
+  // Bouton fermer
+  // -----------------
+  if (interaction.isButton() && interaction.customId === "close_ticket") {
+    if (!interaction.channel) return;
 
-  await interaction.reply({ content: `Ticket créé : ${channel}`, ephemeral: true });
+    const modal = new ModalBuilder()
+      .setCustomId(`reason_modal-${interaction.channel.id}`)
+      .setTitle("Raison de la fermeture du ticket");
 
-  const embed = new EmbedBuilder()
-    .setTitle(`Support Naya 🎫 - ${category.replace("ticket_", "")}`)
-    .setColor("#FFA500")
-    .setDescription(`Salut ${user}, ton ticket pour **${category.replace("ticket_", "")}** est ouvert !\n<@&${TICKET_HANDLER_ROLE_ID}> va le prendre en charge.`)
-    .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
+    const input = new TextInputBuilder()
+      .setCustomId("close_reason")
+      .setLabel("Pourquoi fermez-vous ce ticket ?")
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(true);
 
-  await channel.send({ embeds: [embed] });
+    modal.addComponents(new ActionRowBuilder().addComponents(input));
+    await interaction.showModal(modal);
+  }
+
+  // -----------------
+  // Modal submit pour raison
+  // -----------------
+  if (interaction.isModalSubmit() && interaction.customId.startsWith("reason_modal-")) {
+    const reason = interaction.fields.getTextInputValue("close_reason");
+    const channel = interaction.channel;
+
+    // Extraire l'ID du membre via le nom du salon
+    const match = channel.name.split("-").slice(-1)[0];
+    let userId = match;
+
+    try {
+      const user = await interaction.guild.members.fetch(userId);
+      if (user) {
+        await user.send(`Ton ticket **${channel.name}** a été fermé pour la raison suivante :\n${reason}`);
+      }
+    } catch (err) {
+      console.log("Impossible d'envoyer la raison en DM :", err);
+    }
+
+    await interaction.reply({ content: "Ticket fermé avec succès !", ephemeral: true });
+    await channel.delete().catch(console.error);
+  }
 });
 
 // =====================

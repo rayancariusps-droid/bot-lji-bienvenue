@@ -41,6 +41,7 @@ const ROLES_CHANNEL_ID = "1483992171538550935";
 const STATUS_ROLE_ID = "1486974281073168495";
 const BOOSTER_ROLE_ID = "1450116107061956800";
 const SUPPORT_CHANNEL_ID = "1483992232121077930";
+const REGLEMENT_CHANNEL_ID = "1483583968241651722";
 
 // =====================
 // READY
@@ -66,7 +67,10 @@ client.on("guildMemberAdd", async member => {
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .setFooter({ text: "Amuse-toi bien sur Naya ❄️" });
 
-    await channel.send({ embeds: [embed] });
+    await channel.send({
+      embeds: [embed],
+      files: ["https://media.tenor.com/YXjYxFaPVr0AAAAd/rukia-bankai.gif"]
+    });
 
   } catch (err) {
     console.error("Erreur welcome:", err);
@@ -89,7 +93,7 @@ client.on("messageCreate", async message => {
 
   // MEMBRES
   if (msg === "!membres") {
-    await message.channel.send(
+    message.channel.send(
       `👥 Nous sommes actuellement ${message.guild?.memberCount} membres sur **Naya ❄️**`
     );
   }
@@ -106,14 +110,19 @@ client.on("messageCreate", async message => {
 
 ❄️ **Boost :** En boostant le serveur, tu obtiendras le rôle <@&${BOOSTER_ROLE_ID}> ainsi que les permissions images.
 `)
-      .setImage("https://media.tenor.com/4pWnI5KiQzgAAAAd/rukia-kuchiki-bleach-bankai.gif")
       .setFooter({ text: "Merci de soutenir Naya ❄️ !" });
 
-    channel.send({ embeds: [embed] });
+    channel.send({
+      embeds: [embed],
+      files: ["https://media.tenor.com/4pWnI5KiQzgAAAAd/rukia-kuchiki-bleach-bankai.gif"]
+    });
   }
 
   // REGLEMENT
   if (msg === "!règlement") {
+    const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
+    if (!channel) return message.channel.send("Salon règlement introuvable");
+
     const embed = new EmbedBuilder()
       .setTitle("📜 Règlement du serveur")
       .setColor("#00BFFF")
@@ -153,10 +162,12 @@ Afin de garantir une ambiance saine et agréable pour tous, merci de respecter l
 • Encouragez une communauté positive
 
 Merci de suivre ces règles pour garantir un serveur agréable à tous. 💙
-`)
-      .setImage("https://media.tenor.com/EkQdd6qCqjgAAAAd/rukia-bankai.gif");
+`);
 
-    message.channel.send({ embeds: [embed] });
+    channel.send({
+      embeds: [embed],
+      files: ["https://media.tenor.com/EkQdd6qCqjgAAAAd/rukia-bankai.gif"]
+    });
   }
 });
 

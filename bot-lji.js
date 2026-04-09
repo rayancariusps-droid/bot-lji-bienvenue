@@ -57,7 +57,7 @@ client.on("guildMemberAdd", async member => {
     const memberCount = member.guild.memberCount;
 
     const embed = new EmbedBuilder()
-      .setTitle(`❄️ Bienvenue sur Naya ❄️`)
+      .setTitle(`❄️ Bienvenue sur Naya`)
       .setDescription(`${member} nous rejoint !\nNous sommes maintenant **${memberCount}** membres !\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}> \n<@&1479358568091357234>`)
       .setColor("#00FFFF")
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))

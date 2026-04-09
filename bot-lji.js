@@ -3,21 +3,15 @@
 // =====================
 require("dotenv").config();
 const express = require("express");
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 
 // =====================
 // SERVEUR WEB
 // =====================
 const app = express();
-
-app.get("/", (req, res) => {
-  res.send("Bot Naya en ligne");
-});
-
+app.get("/", (req, res) => res.send("Bot Naya en ligne"));
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Serveur web actif sur le port " + PORT);
-});
+app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
 
 // =====================
 // DISCORD CLIENT
@@ -47,9 +41,7 @@ const RECRUTEMENT_CHANNEL_ID = "1491684338377687070";
 // =====================
 // READY
 // =====================
-client.once("ready", () => {
-  console.log(`Connecté en tant que ${client.user.tag}`);
-});
+client.once("ready", () => console.log(`Connecté en tant que ${client.user.tag}`));
 
 // =====================
 // WELCOME
@@ -60,7 +52,7 @@ client.on("guildMemberAdd", async (member) => {
     if (!channel || !channel.isTextBased()) return;
 
     const embed = new EmbedBuilder()
-      .setTitle("Bienvenue sur Naya ❄️")
+      .setTitle("Bienvenue sur Naya")
       .setColor("#00BFFF")
       .setDescription(`${member} rejoint le serveur !\nNous sommes maintenant **${member.guild.memberCount}** membres.\n\nPrends tes rôles dans <#${ROLES_CHANNEL_ID}>`);
 
@@ -98,7 +90,6 @@ async function checkStatus(member) {
   }
 }
 
-// Vérification périodique
 setInterval(async () => {
   client.guilds.cache.forEach(async (guild) => {
     const members = await guild.members.fetch();
@@ -191,7 +182,7 @@ _ _
 
 Merci de respecter ces règles pour une ambiance agréable 💙
 
-*Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)*
+Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
 
@@ -216,7 +207,6 @@ Merci de respecter ces règles pour une ambiance agréable 💙
       return message.channel.send(`❌ Désolé ${message.author}, tu dois avoir **au moins 3 invitations** pour postuler au staff.`);
     }
 
-    // Si OK, afficher le recrutement
     const embed = new EmbedBuilder()
       .setTitle("Recrutement Staff")
       .setColor("#00BFFF")
@@ -226,7 +216,7 @@ Tu souhaites faire partie du staff de Naya ? Regarde les conditions ci-dessous
 ### Conditions
 > - Avoir minimum **15 ans**
 > - Avoir **3 invitations** minimum
-> - Avoir **500 messages** ou **5h** de voc
+> - Avoir **500 messages** ou **5h de voc**
 > - Avoir **/Naya** ou **gg.Naya** dans ton statut
 
 ### Comportement
@@ -244,33 +234,47 @@ _ _
 
   // ----- TICKETS -----
   if (msg === "!tickets") {
-    const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
+    const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
     if (!channel || !channel.isTextBased()) return;
 
     const embed = new EmbedBuilder()
       .setTitle("💛 _Support Naya_")
-      .setColor("#FFA500") // orange
+      .setColor("#FFA500")
       .setDescription(`
-👑・ **Ticket Couronne**  
-🔹 Tout ce qui est professionnel, échange de dm4ll, fournir chez nous etc…
+👑・ **Tickets Couronne**  
+🔹 Tout Ce Qui Est Professionnel, Échange De Dm4ll, Fournir Chez Nous Etc…
 
-🛡️・ **Ticket Gestion Staff**  
-🔹 Devenir staff, questions relatives aux permissions, demander un rankup / derank etc…
+🛡️・ **Tickets Gestion Staff**  
+🔹 Devenir Staff, Questions Relatives Aux Permissions, Demander Un Rankup / Derank Etc…
 
-🚨・ **Ticket Gestion Abus**  
-🔹 Signaler quelqu’un, abus de permission, problème général…
+🚨・ **Tickets Gestion Abus**  
+🔹 Signaler Quelqu’un, Abus De Permission, Problème Général…
 
-🎉・ **Ticket Animation**  
-🔹 Devenir animateur / animatrice, questions sur les animations…
+🎉・ **Tickets Animation**  
+🔹 Devenir Animateur / Animatrice, Questions Sur Les Animations…
 
-🤝・ **Ticket Partenariat**  
-🔹 Effectuer un partenariat, questions sur les partenariats…
+🤝・ **Tickets Partenariat**  
+🔹 Effectuer Un Partenariat, Questions Sur Les Partenariats…
 
-_Choisis la catégorie adaptée à ta demande pour ouvrir ton ticket_
+_Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
 `)
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
 
-    await channel.send({ embeds: [embed] });
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId("ticket_select")
+          .setPlaceholder("Choisis La Catégorie De Ton Ticket")
+          .addOptions([
+            { label: "Tickets Owner", value: "ticket_owner" },
+            { label: "Tickets Gestion Staff", value: "ticket_staff" },
+            { label: "Tickets Gestion Abus", value: "ticket_abus" },
+            { label: "Tickets Animation", value: "ticket_animation" },
+            { label: "Tickets Partenariat", value: "ticket_partenariat" },
+          ])
+      );
+
+    await channel.send({ embeds: [embed], components: [row] });
   }
 });
 

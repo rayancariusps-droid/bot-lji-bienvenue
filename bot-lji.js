@@ -9,7 +9,9 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, StringSelectM
 // SERVEUR WEB
 // =====================
 const app = express();
-app.get("/", (req, res) => res.send("Bot Naya en ligne"));
+app.get("/", (req, res) => {
+  res.send("Bot Naya en ligne");
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
 
@@ -41,7 +43,9 @@ const RECRUTEMENT_CHANNEL_ID = "1491684338377687070";
 // =====================
 // READY
 // =====================
-client.once("ready", () => console.log(`Connecté en tant que ${client.user.tag}`));
+client.once("ready", () => {
+  console.log(`Connecté en tant que ${client.user.tag}`);
+});
 
 // =====================
 // WELCOME
@@ -90,6 +94,7 @@ async function checkStatus(member) {
   }
 }
 
+// Vérification périodique
 setInterval(async () => {
   client.guilds.cache.forEach(async (guild) => {
     const members = await guild.members.fetch();
@@ -136,7 +141,7 @@ En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supp
 - Si vous le souhaitez, vous pouvez ajouter le **tag du serveur**  
 Cela nous aidera à gagner en visibilité et à renforcer Naya 💙
 
-_ _  
+_ _
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883249.gif");
 
@@ -182,7 +187,7 @@ _ _
 
 Merci de respecter ces règles pour une ambiance agréable 💙
 
-Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)
+*Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)*
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
 
@@ -207,6 +212,7 @@ Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#
       return message.channel.send(`❌ Désolé ${message.author}, tu dois avoir **au moins 3 invitations** pour postuler au staff.`);
     }
 
+    // Si OK, afficher le recrutement
     const embed = new EmbedBuilder()
       .setTitle("Recrutement Staff")
       .setColor("#00BFFF")
@@ -216,7 +222,7 @@ Tu souhaites faire partie du staff de Naya ? Regarde les conditions ci-dessous
 ### Conditions
 > - Avoir minimum **15 ans**
 > - Avoir **3 invitations** minimum
-> - Avoir **500 messages** ou **5h de voc**
+> - Avoir **500 messages** ou **5h** de voc
 > - Avoir **/Naya** ou **gg.Naya** dans ton statut
 
 ### Comportement
@@ -232,49 +238,66 @@ _ _
     channel.send({ embeds: [embed] });
   }
 
-  // ----- TICKETS -----
-  if (msg === "!tickets") {
+  // ----- TICKET EMBED -----
+  if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
-    if (!channel || !channel.isTextBased()) return;
-
     const embed = new EmbedBuilder()
-      .setTitle("💛 _Support Naya_")
+      .setTitle("Support Naya 🎟️")
       .setColor("#FFA500")
       .setDescription(`
-👑・ **Tickets Couronne**  
-🔹 Tout Ce Qui Est Professionnel, Échange De Dm4ll, Fournir Chez Nous Etc…
-
-🛡️・ **Tickets Gestion Staff**  
-🔹 Devenir Staff, Questions Relatives Aux Permissions, Demander Un Rankup / Derank Etc…
-
-🚨・ **Tickets Gestion Abus**  
-🔹 Signaler Quelqu’un, Abus De Permission, Problème Général…
-
-🎉・ **Tickets Animation**  
-🔹 Devenir Animateur / Animatrice, Questions Sur Les Animations…
-
-🤝・ **Tickets Partenariat**  
-🔹 Effectuer Un Partenariat, Questions Sur Les Partenariats…
-
-_Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
+👑 Bienvenue dans le **support** !  
+Choisis la catégorie adaptée à ta demande ci-dessous
 `)
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
 
-    const row = new ActionRowBuilder()
-      .addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId("ticket_select")
-          .setPlaceholder("Choisis La Catégorie De Ton Ticket")
-          .addOptions([
-            { label: "Tickets Owner", value: "ticket_owner" },
-            { label: "Tickets Gestion Staff", value: "ticket_staff" },
-            { label: "Tickets Gestion Abus", value: "ticket_abus" },
-            { label: "Tickets Animation", value: "ticket_animation" },
-            { label: "Tickets Partenariat", value: "ticket_partenariat" },
-          ])
-      );
+    const row = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId("ticket_select")
+        .setPlaceholder("Choisir une option de ticket")
+        .addOptions([
+          { label: "Tickets Gestion Staff", value: "ticket_staff" },
+          { label: "Tickets Gestion Abus", value: "ticket_abus" },
+          { label: "Tickets Animation", value: "ticket_animation" },
+          { label: "Tickets Partenariat", value: "ticket_partenaire" }
+        ])
+    );
 
     await channel.send({ embeds: [embed], components: [row] });
+  }
+});
+
+// =====================
+// INTERACTION TICKETS
+// =====================
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isStringSelectMenu()) return;
+
+  if (interaction.customId === "ticket_select") {
+    const category = interaction.values[0]; // Valeur choisie
+    const guild = interaction.guild;
+    const member = interaction.user;
+
+    const ticketName = `ticket-${member.username}`.toLowerCase();
+
+    // Vérifier si le ticket existe déjà
+    const existingChannel = guild.channels.cache.find(c => c.name === ticketName);
+    if (existingChannel) {
+      return interaction.reply({ content: `Tu as déjà un ticket ouvert : ${existingChannel}`, ephemeral: true });
+    }
+
+    // Créer le salon texte
+    const channel = await guild.channels.create({
+      name: ticketName,
+      type: 0, // GUILD_TEXT
+      permissionOverwrites: [
+        { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
+        { id: member.id, allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"] },
+        { id: STATUS_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"] }
+      ]
+    });
+
+    await channel.send(`Salut ${member}, ton ticket pour **${category.replace("ticket_", "")}** est ouvert !`);
+    await interaction.reply({ content: `Ton ticket a été créé : ${channel}`, ephemeral: true });
   }
 });
 

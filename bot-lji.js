@@ -9,9 +9,7 @@ const {
   EmbedBuilder, 
   ActionRowBuilder, 
   StringSelectMenuBuilder, 
-  ButtonBuilder, 
-  ButtonStyle, 
-  PermissionsBitField 
+  ChannelType 
 } = require("discord.js");
 
 // =====================
@@ -24,7 +22,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
 
 // =====================
-// CLIENT
+// DISCORD CLIENT
 // =====================
 const client = new Client({
   intents: [
@@ -37,7 +35,7 @@ const client = new Client({
 });
 
 // =====================
-// IDS
+// IDS DES SALONS ET RÔLES
 // =====================
 const WELCOME_CHANNEL_ID = "1483601884165181604";
 const ROLES_CHANNEL_ID = "1483992171538550935";
@@ -47,7 +45,7 @@ const SUPPORT_CHANNEL_ID = "1483992232121077930";
 const REGLEMENT_CHANNEL_ID = "1483583968241651722";
 const TICKET_CHANNEL_ID = "1483599648018006150";
 const RECRUTEMENT_CHANNEL_ID = "1491684338377687070";
-const TICKET_HANDLER_ROLE_ID = "1390086486291910726";
+const TICKET_HANDLER_ROLE_ID = "1390086486291910726"; // rôle qui peut voir/fermer tickets
 const WELCOME_ROLE_ID = "1479358568091357234";
 
 // =====================
@@ -58,19 +56,15 @@ client.once("ready", () => {
 });
 
 // =====================
-// WELCOME TEXTE SIMPLE
+// WELCOME
 // =====================
 client.on("guildMemberAdd", async (member) => {
   try {
     const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
     if (!channel || !channel.isTextBased()) return;
 
-    // Ajout automatique du rôle welcome
-    const role = member.guild.roles.cache.get(WELCOME_ROLE_ID);
-    if (role) await member.roles.add(role);
-
     await channel.send(
-      `Bienvenue sur Naya ❄️ ${member} ! Nous sommes maintenant **${member.guild.memberCount}** membres. Prends tes rôles dans <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>`
+      `Bienvenue sur **Naya ❄️** ${member} ! Nous sommes maintenant **${member.guild.memberCount}** membres. Prends tes rôles ici : <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>`
     );
   } catch (err) {
     console.error("Erreur welcome:", err);
@@ -78,7 +72,7 @@ client.on("guildMemberAdd", async (member) => {
 });
 
 // =====================
-// CHECK STATUT /NAYA
+// ROLE STATUT /NAYA
 // =====================
 async function checkStatus(member) {
   try {
@@ -92,22 +86,20 @@ async function checkStatus(member) {
 
     if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
       await member.roles.add(STATUS_ROLE_ID);
-      console.log("Rôle ajouté à", member.user.tag);
+      console.log(`Rôle /Naya ajouté à ${member.user.tag}`);
     }
 
     if (!hasStatus && member.roles.cache.has(STATUS_ROLE_ID)) {
       await member.roles.remove(STATUS_ROLE_ID);
-      console.log("Rôle retiré à", member.user.tag);
+      console.log(`Rôle /Naya retiré à ${member.user.tag}`);
     }
-
   } catch (err) {
     console.error("Erreur statut:", err);
   }
 }
 
-// Vérification périodique
 setInterval(async () => {
-  client.guilds.cache.forEach(async (guild) => {
+  client.guilds.cache.forEach(async guild => {
     const members = await guild.members.fetch();
     members.forEach(member => checkStatus(member));
   });
@@ -140,142 +132,139 @@ client.on("messageCreate", async (message) => {
   if (msg === "!soutien") {
     const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
     const embed = new EmbedBuilder()
-      .setTitle("Soutenir Naya ❄️")
+      .setTitle("❄️ **Soutenir __Naya__**")
       .setColor("#00BFFF")
       .setDescription(`
-Ajoute **/Naya** ou **gg.Naya** dans ton statut pour obtenir <@&${STATUS_ROLE_ID}>
-
-Booste le serveur pour avoir <@&${BOOSTER_ROLE_ID}> 💎
-`);
-    channel.send({ embeds: [embed] });
+- Ajoute dans ton **statut** \`/Naya\` ou \`gg.Naya\` pour obtenir le rôle <@&${STATUS_ROLE_ID}>
+- **Booster le serveur** pour recevoir <@&${BOOSTER_ROLE_ID}>
+- Ajouter le **tag du serveur** pour plus de visibilité 💙
+`)
+      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883249.gif");
+    await channel.send({ embeds: [embed] });
   }
 
   // ----- REGLEMENT -----
   if (msg === "!règlement") {
-    const channel = await client.channels.fetch(REGLEMENT_CHANNEL_ID);
+    const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
+    if (!channel) return;
     const embed = new EmbedBuilder()
-      .setTitle("📜 Règlement")
+      .setTitle("📜 **RÈGLEMENT NAYA**")
       .setColor("#00BFFF")
-      .setDescription(`
-Respecte les règles Discord et le serveur.
-
-Pas d'insultes, spam ou contenu interdit.
-
-Ouvre un ticket en cas de problème.
-`);
+      .setDescription(`Merci de respecter les règles du serveur. Pour tout problème, ouvre un [ticket](<#${TICKET_CHANNEL_ID}>)`)
+      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
     channel.send({ embeds: [embed] });
   }
 
   // ----- RECRUTEMENT -----
   if (msg === "!recrutement") {
     const channel = await client.channels.fetch(RECRUTEMENT_CHANNEL_ID);
+    if (!channel || !channel.isTextBased()) return;
+
+    const invites = await message.guild.invites.fetch();
+    let userInvites = 0;
+    invites.forEach(invite => {
+      if (invite.inviter && invite.inviter.id === message.author.id) userInvites += invite.uses;
+    });
+
+    if (userInvites < 3) {
+      return message.channel.send(`❌ Désolé ${message.author}, tu dois avoir **au moins 3 invitations** pour postuler au staff.`);
+    }
+
     const embed = new EmbedBuilder()
       .setTitle("Recrutement Staff")
       .setColor("#00BFFF")
-      .setDescription(`
-Conditions :
-- 15 ans minimum
-- 3 invitations
-- actif
-
-Ouvre un ticket staff dans <#${TICKET_CHANNEL_ID}>
-`);
+      .setDescription(`Tu souhaites faire partie du staff ? Regarde les conditions et ouvre un ticket dans <#${TICKET_CHANNEL_ID}>`)
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491691648411893780/17757173762299050023420614074528.gif");
     channel.send({ embeds: [embed] });
   }
 
-  // ----- TICKET PANEL -----
+  // ----- TICKETS -----
   if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
+    if (!channel || !channel.isTextBased()) return;
+
     const embed = new EmbedBuilder()
-      .setTitle("Support Naya 🎟️")
+      .setTitle("Support Naya 🎫")
       .setColor("#FFA500")
       .setDescription(`
 👑・ **Tickets Couronne**  
-🔹 Professionnel, achats, etc…
+🔹 Tout Ce Qui Est Professionnel, Échange De Dm4ll, Fournir Chez Nous Etc…
 
 🛡️・ **Tickets Gestion Staff**  
-🔹 Staff, rankup…
+🔹 Devenir Staff, Questions Relatives Aux Permissions, Demander Un Rankup / Derank Etc…
 
 🚨・ **Tickets Gestion Abus**  
-🔹 Signalement…
+🔹 Signaler Quelqu’un, Abus De Permission, Problème Général…
 
 🎉・ **Tickets Animation**  
+🔹 Devenir Animateur / Animatrice, Questions Sur Les Animations…
 
-🤝・ **Tickets Partenariat**  
+🤝・ **Partenariat**  
+🔹 Effectuer Un Partenariat, Questions Sur Les Partenariats…
 
-_Choisis une catégorie_
+_Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
 `)
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
 
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId("ticket_select")
-        .setPlaceholder("Choisir")
+        .setPlaceholder("Choisis une option")
         .addOptions([
-          { label: "Couronne", value: "ticket_couronne" },
-          { label: "Staff", value: "ticket_staff" },
-          { label: "Abus", value: "ticket_abus" },
-          { label: "Animation", value: "ticket_animation" },
-          { label: "Partenariat", value: "ticket_partenaire" }
+          { label: "👑 Tickets Couronne", value: "ticket_couronne", description: "Tout ce qui est professionnel, échange de Dm4ll, fournir chez nous etc…" },
+          { label: "🛡️ Tickets Gestion Staff", value: "ticket_staff", description: "Devenir Staff, questions sur les permissions, demander un rankup / derank etc…" },
+          { label: "🚨 Tickets Gestion Abus", value: "ticket_abus", description: "Signaler quelqu’un, abus de permission, problème général…" },
+          { label: "🎉 Tickets Animation", value: "ticket_animation", description: "Devenir animateur/animatrice, questions sur les animations…" },
+          { label: "🤝 Partenariat", value: "ticket_partenariat", description: "Effectuer un partenariat, questions sur les partenariats…" },
         ])
     );
 
-    channel.send({ embeds: [embed], components: [row] });
+    await channel.send({ embeds: [embed], components: [row] });
   }
 });
 
 // =====================
-// TICKETS INTERACTIFS
+// INTERACTIONS TICKETS
 // =====================
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.guild) return;
-  const { guild, user } = interaction;
-  const member = guild.members.cache.get(user.id);
+  if (!interaction.isStringSelectMenu()) return;
 
-  // ----- CREATION TICKET -----
-  if (interaction.isStringSelectMenu() && interaction.customId === "ticket_select") {
-    const name = `ticket-${user.id}`; // nom unique par ID
+  const { values, user, guild } = interaction;
+  const category = values[0];
 
-    const existing = guild.channels.cache.find(c => c.name === name);
-    if (existing) return interaction.reply({ content: `Déjà ouvert : ${existing}`, ephemeral: true });
+  const nameMap = {
+    ticket_staff: "gestion-staff",
+    ticket_abus: "gestion-abus",
+    ticket_couronne: "couronne",
+    ticket_animation: "animation",
+    ticket_partenariat: "partenariat"
+  };
+  const ticketName = `${nameMap[category]}-${user.username.toLowerCase()}`;
 
-    const channel = await guild.channels.create({
-      name,
-      type: 0,
-      permissionOverwrites: [
-        { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
-        { id: user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-        { id: TICKET_HANDLER_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
-      ]
-    });
-
-    const btn = new ButtonBuilder()
-      .setCustomId("close_ticket")
-      .setLabel("🔒 Fermer")
-      .setStyle(ButtonStyle.Danger);
-
-    const row = new ActionRowBuilder().addComponents(btn);
-
-    await channel.send({
-      content: `Salut ${user} <@&${TICKET_HANDLER_ROLE_ID}> va t'aider`,
-      components: [row]
-    });
-
-    interaction.reply({ content: `Ticket créé : ${channel}`, ephemeral: true });
+  const existingChannel = guild.channels.cache.find(c => c.name === ticketName);
+  if (existingChannel) {
+    return interaction.reply({ content: "Vous avez déjà un ticket ouvert !", ephemeral: true });
   }
 
-  // ----- FERMER TICKET -----
-  if (interaction.isButton() && interaction.customId === "close_ticket") {
-    const channel = interaction.channel;
+  const channel = await guild.channels.create({
+    name: ticketName,
+    type: ChannelType.GuildText,
+    permissionOverwrites: [
+      { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
+      { id: user.id, allow: ["ViewChannel", "SendMessages"] },
+      { id: TICKET_HANDLER_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ManageChannels"] }
+    ]
+  });
 
-    if (!channel.name.startsWith("ticket-") || 
-        (channel.name !== `ticket-${user.id}` && !member.roles.cache.has(TICKET_HANDLER_ROLE_ID))) {
-      return interaction.reply({ content: "❌ Refusé", ephemeral: true });
-    }
+  await interaction.reply({ content: `Ticket créé : ${channel}`, ephemeral: true });
 
-    interaction.reply("Fermeture...");
-    setTimeout(() => channel.delete(), 3000);
-  }
+  const embed = new EmbedBuilder()
+    .setTitle(`Support Naya 🎫 - ${category.replace("ticket_", "")}`)
+    .setColor("#FFA500")
+    .setDescription(`Salut ${user}, ton ticket pour **${category.replace("ticket_", "")}** est ouvert !\n<@&${TICKET_HANDLER_ROLE_ID}> va le prendre en charge.`)
+    .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
+
+  await channel.send({ embeds: [embed] });
 });
 
 // =====================

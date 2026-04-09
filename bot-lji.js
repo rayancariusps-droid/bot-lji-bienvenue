@@ -42,6 +42,7 @@ const STATUS_ROLE_ID = "1486974281073168495";
 const BOOSTER_ROLE_ID = "1450116107061956800";
 const SUPPORT_CHANNEL_ID = "1483992232121077930";
 const REGLEMENT_CHANNEL_ID = "1483583968241651722";
+const TICKET_CHANNEL_ID = "1483599648018006150";
 
 // =====================
 // READY
@@ -93,15 +94,19 @@ client.on("messageCreate", async message => {
     const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
-      .setTitle("❄️ Soutenir Naya")
+      .setTitle("❄️ **Soutenir __Naya__**")
       .setColor("#00BFFF")
       .setDescription(`
-❄️ Mets **/Naya** dans ton statut → rôle automatique <@&${STATUS_ROLE_ID}>
+Commence par ajouter dans ton **statut** \`/Naya\` !  
+Cela te permettra d'obtenir le rôle <@&${STATUS_ROLE_ID}>, et tu pourras profiter de certaines permissions spéciales.
 
-❄️ Boost le serveur → rôle <@&${BOOSTER_ROLE_ID}>
+Tu peux aussi **booster le serveur** !  
+En boostant, tu recevras le rôle <@&${BOOSTER_ROLE_ID}> et des permissions supplémentaires.
 
-❄️ Si vous le souhaitez, vous pouvez aussi ajouter le **tag du serveur** !  
-Cela nous aide à gagner en visibilité et à renforcer Naya 💙
+Enfin, si vous le souhaitez, vous pouvez ajouter le **tag du serveur** !  
+Cela nous aidera à gagner en visibilité et à renforcer Naya 💙
+
+_ _  
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883418183249.gif");
 
@@ -150,6 +155,8 @@ Cela nous aide à gagner en visibilité et à renforcer Naya 💙
 • Encouragez les autres membres et participez activement  
 
 Merci de respecter ces règles afin de garder une ambiance saine et agréable pour tous 💙
+
+*Pour tout problème avec le staff ou autre, hésite pas à ouvrir un [ticket](<#${TICKET_CHANNEL_ID}>)*
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
 

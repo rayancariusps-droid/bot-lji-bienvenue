@@ -96,10 +96,6 @@ client.on("messageCreate", async message => {
 
   // SOUTIEN
   if (msg === "!soutien") {
-    if (!message.member.permissions.has("ManageMessages")) {
-      return message.reply("❌ Tu n'as pas la permission d'envoyer cette commande !");
-    }
-
     const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()

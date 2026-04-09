@@ -67,10 +67,7 @@ client.on("guildMemberAdd", async member => {
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .setFooter({ text: "Amuse-toi bien sur Naya ❄️" });
 
-    await channel.send({
-      embeds: [embed],
-      files: ["https://media.tenor.com/YXjYxFaPVr0AAAAd/rukia-bankai.gif"]
-    });
+    await channel.send({ embeds: [embed] });
 
   } catch (err) {
     console.error("Erreur welcome:", err);
@@ -110,12 +107,10 @@ client.on("messageCreate", async message => {
 
 ❄️ **Boost :** En boostant le serveur, tu obtiendras le rôle <@&${BOOSTER_ROLE_ID}> ainsi que les permissions images.
 `)
+      .setImage("https://images-ext-1.discordapp.net/external/FlTHHTu_Rr82xhC8FFd9q3HqKx3qc6G42CJPW1UZTcQ/https/media.tenor.com/Xl5nTgBuzaIAAAPo/rukia-kuchiki.mp4")
       .setFooter({ text: "Merci de soutenir Naya ❄️ !" });
 
-    channel.send({
-      embeds: [embed],
-      files: ["https://media.tenor.com/4pWnI5KiQzgAAAAd/rukia-kuchiki-bleach-bankai.gif"]
-    });
+    channel.send({ embeds: [embed] });
   }
 
   // REGLEMENT
@@ -162,12 +157,10 @@ Afin de garantir une ambiance saine et agréable pour tous, merci de respecter l
 • Encouragez une communauté positive
 
 Merci de suivre ces règles pour garantir un serveur agréable à tous. 💙
-`);
+`)
+      .setImage("https://images-ext-1.discordapp.net/external/DTOcEwPhS6h5bHmXnBZAajFzzpBDWYi9Jnuv3fiQHTw/https/media.tenor.com/0MR_BdLdEokAAAPo/rukia-kuchiki-bleach.mp4");
 
-    channel.send({
-      embeds: [embed],
-      files: ["https://media.tenor.com/EkQdd6qCqjgAAAAd/rukia-bankai.gif"]
-    });
+    channel.send({ embeds: [embed] });
   }
 });
 

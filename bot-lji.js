@@ -57,15 +57,13 @@ client.once("ready", () => {
 });
 
 // =====================
-// WELCOME (TON STYLE ORIGINAL)
+// WELCOME (TON ORIGINAL)
 // =====================
 client.on("guildMemberAdd", async (member) => {
   try {
 
     const role = member.guild.roles.cache.get(WELCOME_ROLE_ID);
-    if (role) {
-      await member.roles.add(role).catch(() => {});
-    }
+    if (role) await member.roles.add(role).catch(() => {});
 
     const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
     if (!channel) return;
@@ -109,7 +107,7 @@ client.on("messageCreate", async (message) => {
   const msg = message.content.toLowerCase();
 
   // =====================
-  // TICKET (TON EMBED EXACT)
+  // TICKET PANEL (TON EXACT)
   // =====================
   if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
@@ -153,28 +151,45 @@ client.on("messageCreate", async (message) => {
     return channel.send({ embeds: [embed], components: [row] });
   }
 
-  // REACT COMMANDS
-  if (msg === "!react1") sendReact(message, "genre", "Sélection du genre",
+  // =====================
+  // REACT COMMANDS (AVEC TES GIFS ORIGINAUX)
+  // =====================
+  if (msg === "!react1") sendReact(
+    "genre",
+    "Sélection du genre",
+    "https://cdn.discordapp.com/attachments/1483604871276924959/1492970578011885689/17760222888293576085531044650226.gif",
     [
       ["Homme", "1398475032480583821"],
       ["Femme", "1398475137678049370"],
       ["Non binaire", "1441952406685352208"]
-    ]);
+    ]
+  );
 
-  if (msg === "!react2") sendReact(message, "age", "Sélection de l'âge",
+  if (msg === "!react2") sendReact(
+    "age",
+    "Sélection de l'âge",
+    "https://cdn.discordapp.com/attachments/1483604871276924959/1492972636844851341/17760227849791360223833108533606.gif",
     [
       ["Majeur", "1492989745385443560"],
       ["Mineur", "1492989803531342045"]
-    ]);
+    ]
+  );
 
-  if (msg === "!react3") sendReact(message, "situation", "Situation relationnelle",
+  if (msg === "!react3") sendReact(
+    "situation",
+    "Sélection de la situation",
+    "https://cdn.discordapp.com/attachments/1483604871276924959/1492994572148543518/17760280123167317692973232058489.gif",
     [
       ["Couple", "1492993649141612575"],
       ["Célibataire", "1492993697627902033"],
       ["Compliqué", "1492993754225705070"]
-    ]);
+    ]
+  );
 
-  if (msg === "!react4") sendReact(message, "couleur", "Choix de couleur",
+  if (msg === "!react4") sendReact(
+    "couleur",
+    "Choix de couleur",
+    "https://cdn.discordapp.com/attachments/1483604871276924959/1493001041233444915/17760295614282950030473050114055.gif",
     [
       ["Noir", "1492991889815765072"],
       ["Blanc", "1492991801332863118"],
@@ -189,18 +204,20 @@ client.on("messageCreate", async (message) => {
       ["Bleu", "1448057514678812732"],
       ["Bleu foncé", "1492992429454917765"],
       ["Pastel", "1492992142904266752"]
-    ]);
+    ]
+  );
 });
 
 // =====================
 // REACT FUNCTION
 // =====================
-function sendReact(message, id, title, options) {
+function sendReact(id, title, gif, options) {
   client.channels.fetch(REACT_CHANNEL_ID).then(channel => {
 
     const embed = new EmbedBuilder()
       .setTitle(title)
       .setColor("#2B2D31")
+      .setImage(gif)
       .setDescription("Sélectionnez un rôle dans le menu.");
 
     const row = new ActionRowBuilder().addComponents(
@@ -218,11 +235,11 @@ function sendReact(message, id, title, options) {
 }
 
 // =====================
-// INTERACTIONS
+// INTERACTIONS (TOUT)
 // =====================
 client.on("interactionCreate", async (interaction) => {
 
-  // CREATE TICKET
+  // TICKET CREATE
   if (interaction.isStringSelectMenu() && interaction.customId === "ticket_select") {
 
     const type = interaction.values[0];
@@ -300,6 +317,35 @@ client.on("interactionCreate", async (interaction) => {
 
     setTimeout(() => channel.delete().catch(() => {}), 2000);
   }
+
+  // REACT ROLES FIX
+  if (interaction.isStringSelectMenu() && interaction.customId !== "ticket_select") {
+
+    const member = interaction.member;
+    const role = interaction.values[0];
+
+    const groups = {
+      genre: ["1398475032480583821","1398475137678049370","1441952406685352208"],
+      age: ["1492989745385443560","1492989803531342045"],
+      situation: ["1492993649141612575","1492993697627902033","1492993754225705070"],
+      couleur: [
+        "1492991889815765072","1492991801332863118","1448233887431131146",
+        "1448056662706618430","1448058153500414124","1448056143736996062",
+        "1448058039109160980","1448057680680718550","1448233970910105691",
+        "1448233601354170421","1448057514678812732","1492992429454917765",
+        "1492992142904266752"
+      ]
+    };
+
+    const group = groups[interaction.customId];
+    if (!group) return;
+
+    await member.roles.remove(group).catch(() => {});
+    await member.roles.add(role).catch(() => {});
+
+    return interaction.reply({ content: "Rôle mis à jour", ephemeral: true });
+  }
+
 });
 
 // =====================

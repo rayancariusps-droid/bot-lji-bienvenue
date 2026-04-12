@@ -45,9 +45,6 @@ const client = new Client({
 const WELCOME_CHANNEL_ID = "1483601884165181604";
 const ROLES_CHANNEL_ID = "1483992171538550935";
 const STATUS_ROLE_ID = "1486974281073168495";
-const BOOSTER_ROLE_ID = "1450116107061956800";
-const SUPPORT_CHANNEL_ID = "1483992232121077930";
-const REGLEMENT_CHANNEL_ID = "1483583968241651722";
 const TICKET_CHANNEL_ID = "1483599648018006150";
 const LOG_CHANNEL_ID = "1492774051549020180";
 const TICKET_HANDLER_ROLE_ID = "1390086486291910726";
@@ -64,35 +61,31 @@ client.once("ready", () => {
 // WELCOME
 // =====================
 client.on("guildMemberAdd", async (member) => {
-  try {
-    const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
-    if (!channel) return;
+  const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
+  if (!channel) return;
 
-    await channel.send(
-      `Bienvenue sur **Naya ❄️** ${member} ! Nous sommes maintenant **${member.guild.memberCount}** membres. Prends tes rôles ici : <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>`
-    );
-  } catch (err) {
-    console.error(err);
-  }
+  channel.send(
+    `Bienvenue sur **Naya ❄️** ${member} ! Nous sommes maintenant **${member.guild.memberCount}** membres. Prends tes rôles ici : <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>`
+  );
 });
 
 // =====================
-// ROLE STATUT /NAYA
+// STATUT ROLE
 // =====================
 client.on("presenceUpdate", async (oldPresence, newPresence) => {
   if (!newPresence || !newPresence.member) return;
 
   const member = newPresence.member;
   const customStatus = member.presence?.activities.find(a => a.type === 4);
-  const statusText = customStatus?.state?.toLowerCase() || "";
+  const text = customStatus?.state?.toLowerCase() || "";
 
-  const hasStatus = statusText.includes("/naya") || statusText.includes("gg.naya");
+  const has = text.includes("/naya") || text.includes("gg.naya");
 
-  if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
+  if (has && !member.roles.cache.has(STATUS_ROLE_ID)) {
     await member.roles.add(STATUS_ROLE_ID);
   }
 
-  if (!hasStatus && member.roles.cache.has(STATUS_ROLE_ID)) {
+  if (!has && member.roles.cache.has(STATUS_ROLE_ID)) {
     await member.roles.remove(STATUS_ROLE_ID);
   }
 });
@@ -104,56 +97,18 @@ client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   const msg = message.content.toLowerCase();
 
-  // ----- PING -----
+  // ping
   if (msg === "!ping") {
     const sent = await message.channel.send("Pong");
-    await sent.edit(`🏓 ${sent.createdTimestamp - message.createdTimestamp}ms`);
+    sent.edit(`🏓 ${sent.createdTimestamp - message.createdTimestamp}ms`);
   }
 
-  // ----- MEMBRES -----
+  // membres
   if (msg === "!membres") {
-    await message.channel.send(`👥 Nous sommes actuellement ${message.guild.memberCount} membres sur Naya ❄️`);
+    message.channel.send(`👥 ${message.guild.memberCount} membres`);
   }
 
-  // ----- SOUTIEN -----
-  if (msg === "!soutien") {
-    const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
-
-    const embed = new EmbedBuilder()
-      .setTitle("❄️ **Soutenir __Naya__**")
-      .setColor("#00BFFF")
-      .setDescription(`
-- Ajoute dans ton **statut** \`/Naya\` ou \`gg.Naya\` pour obtenir le rôle <@&${STATUS_ROLE_ID}>
-- **Booster le serveur** pour recevoir <@&${BOOSTER_ROLE_ID}>
-- Ajouter le **tag du serveur** pour plus de visibilité 💙
-`)
-      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883249.gif");
-
-    await channel.send({ embeds: [embed] });
-  }
-
-  // ----- REGLEMENT -----
-  if (msg === "!règlement") {
-    const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
-    if (!channel) return;
-
-    const embed = new EmbedBuilder()
-      .setTitle("📜 **RÈGLEMENT NAYA**")
-      .setColor("#00BFFF")
-      .setDescription(`
-Merci de respecter les règles du serveur.  
-Pour tout problème, ouvre un ticket dans <#${TICKET_CHANNEL_ID}>  
-
-**Les sanctions peuvent aller du mute au bannissement selon la gravité.**  
-**Le respect est obligatoire envers tous les membres et le staff.**  
-`)
-      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif")
-      .setFooter({ text: "Si vous avez un problème, n'hésitez pas à aller ici : #ticket 🎫" });
-
-    channel.send({ embeds: [embed] });
-  }
-
-  // ----- ROLES INFO -----
+  // roles info
   if (msg === "!rolesinfo") {
     const channel = await client.channels.fetch("1483992112780415126");
 
@@ -163,9 +118,6 @@ Pour tout problème, ouvre un ticket dans <#${TICKET_CHANNEL_ID}>
       .setDescription(`
 <@&1448188699052478554>  
 Ce rôle est attribué au créateur du serveur. Il a tous les privilèges administratifs, y compris la gestion des rôles, des canaux et des paramètres du serveur.
-
-<@&1446287927180132434>  
-Ce rôle est attribué au co-créateur du serveur. Il possède tous les privilèges administratifs, y compris la gestion des rôles, des canaux et des paramètres du serveur.
 
 <@&1478162378825924648>  
 Un administrateur a presque les mêmes pouvoirs qu'un fondateur, mais sans certains privilèges comme le transfert de propriété du serveur. Il peut gérer les membres, les rôles et les permissions.
@@ -185,18 +137,14 @@ Seules les personnes de l'équipe Naya peuvent avoir ce rôle.
 <@&1431984265393995867>  
 Ce rôle est attribué aux membres classiques avec des permissions de base.
 
-<@&1486974281073168495>  
-Ce rôle est attribué si vous mettez \`/naya\` ou \`gg.naya\` dans votre statut. Il permet d’envoyer des gifs et images dans les vocs et offre plusieurs avantages.  
-👉 Va voir ici : <#1483992232121077930>
-
 **J'espère que les informations fournies sont claires.**
 `)
-      .setImage("https://cdn.discordapp.com/attachments/1483992446810587136/1492772818998263870/17759751427231649579972197828701.gif");
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492931988041236750/17760131015903024058531000763866.gif");
 
     channel.send({ embeds: [embed] });
   }
 
-  // ----- TICKETS -----
+  // ticket
   if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
 
@@ -228,15 +176,15 @@ _Choisis la catégorie adaptée à ta demande pour ouvrir ton ticket_
         .setCustomId("ticket_select")
         .setPlaceholder("Choisis une option")
         .addOptions([
-          { label: "👑 Tickets Couronne", value: "ticket_couronne" },
-          { label: "🛡️ Tickets Gestion Staff", value: "ticket_staff" },
-          { label: "🚨 Tickets Gestion Abus", value: "ticket_abus" },
-          { label: "🎉 Tickets Animation", value: "ticket_animation" },
-          { label: "🤝 Partenariat", value: "ticket_partenariat" }
+          { label: "👑 Tickets Couronne", value: "couronne" },
+          { label: "🛡️ Tickets Gestion Staff", value: "staff" },
+          { label: "🚨 Tickets Gestion Abus", value: "abus" },
+          { label: "🎉 Tickets Animation", value: "animation" },
+          { label: "🤝 Partenariat", value: "partenariat" }
         ])
     );
 
-    await channel.send({ embeds: [embed], components: [row] });
+    channel.send({ embeds: [embed], components: [row] });
   }
 });
 

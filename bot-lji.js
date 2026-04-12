@@ -27,7 +27,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
 
 // =====================
-// DISCORD CLIENT
+// CLIENT
 // =====================
 const client = new Client({
   intents: [
@@ -40,7 +40,7 @@ const client = new Client({
 });
 
 // =====================
-// IDS DES SALONS ET RÔLES
+// IDS
 // =====================
 const WELCOME_CHANNEL_ID = "1483601884165181604";
 const ROLES_CHANNEL_ID = "1483992171538550935";
@@ -49,8 +49,8 @@ const BOOSTER_ROLE_ID = "1450116107061956800";
 const SUPPORT_CHANNEL_ID = "1483992232121077930";
 const REGLEMENT_CHANNEL_ID = "1483583968241651722";
 const TICKET_CHANNEL_ID = "1483599648018006150";
-const RECRUTEMENT_CHANNEL_ID = "1491684338377687070";
-const TICKET_HANDLER_ROLE_ID = "1390086486291910726"; // rôle qui peut voir/fermer tickets
+const LOG_CHANNEL_ID = "1492774051549020180";
+const TICKET_HANDLER_ROLE_ID = "1390086486291910726";
 const WELCOME_ROLE_ID = "1479358568091357234";
 
 // =====================
@@ -66,53 +66,35 @@ client.once("ready", () => {
 client.on("guildMemberAdd", async (member) => {
   try {
     const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
-    if (!channel || !channel.isTextBased()) return;
+    if (!channel) return;
 
     await channel.send(
       `Bienvenue sur **Naya ❄️** ${member} ! Nous sommes maintenant **${member.guild.memberCount}** membres. Prends tes rôles ici : <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>`
     );
   } catch (err) {
-    console.error("Erreur welcome:", err);
+    console.error(err);
   }
 });
 
 // =====================
 // ROLE STATUT /NAYA
 // =====================
-async function checkStatus(member) {
-  try {
-    const presence = member.presence;
-    if (!presence) return;
-
-    const customStatus = presence.activities.find(a => a.type === 4);
-    const statusText = customStatus && customStatus.state ? customStatus.state.toLowerCase() : "";
-
-    const hasStatus = statusText.includes("/naya") || statusText.includes("gg.naya");
-
-    if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
-      await member.roles.add(STATUS_ROLE_ID);
-      console.log(`Rôle /Naya ajouté à ${member.user.tag}`);
-    }
-
-    if (!hasStatus && member.roles.cache.has(STATUS_ROLE_ID)) {
-      await member.roles.remove(STATUS_ROLE_ID);
-      console.log(`Rôle /Naya retiré à ${member.user.tag}`);
-    }
-  } catch (err) {
-    console.error("Erreur statut:", err);
-  }
-}
-
-setInterval(async () => {
-  client.guilds.cache.forEach(async guild => {
-    const members = await guild.members.fetch();
-    members.forEach(member => checkStatus(member));
-  });
-}, 30000);
-
-client.on("presenceUpdate", (oldPresence, newPresence) => {
+client.on("presenceUpdate", async (oldPresence, newPresence) => {
   if (!newPresence || !newPresence.member) return;
-  checkStatus(newPresence.member);
+
+  const member = newPresence.member;
+  const customStatus = member.presence?.activities.find(a => a.type === 4);
+  const statusText = customStatus?.state?.toLowerCase() || "";
+
+  const hasStatus = statusText.includes("/naya") || statusText.includes("gg.naya");
+
+  if (hasStatus && !member.roles.cache.has(STATUS_ROLE_ID)) {
+    await member.roles.add(STATUS_ROLE_ID);
+  }
+
+  if (!hasStatus && member.roles.cache.has(STATUS_ROLE_ID)) {
+    await member.roles.remove(STATUS_ROLE_ID);
+  }
 });
 
 // =====================
@@ -136,6 +118,7 @@ client.on("messageCreate", async (message) => {
   // ----- SOUTIEN -----
   if (msg === "!soutien") {
     const channel = await client.channels.fetch(SUPPORT_CHANNEL_ID);
+
     const embed = new EmbedBuilder()
       .setTitle("❄️ **Soutenir __Naya__**")
       .setColor("#00BFFF")
@@ -145,6 +128,7 @@ client.on("messageCreate", async (message) => {
 - Ajouter le **tag du serveur** pour plus de visibilité 💙
 `)
       .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491651763714003016/17757078415539010381883249.gif");
+
     await channel.send({ embeds: [embed] });
   }
 
@@ -152,62 +136,90 @@ client.on("messageCreate", async (message) => {
   if (msg === "!règlement") {
     const channel = message.guild.channels.cache.get(REGLEMENT_CHANNEL_ID);
     if (!channel) return;
+
     const embed = new EmbedBuilder()
       .setTitle("📜 **RÈGLEMENT NAYA**")
       .setColor("#00BFFF")
-      .setDescription(`Merci de respecter les règles du serveur. Pour tout problème, ouvre un [ticket](<#${TICKET_CHANNEL_ID}>)`)
-      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif");
+      .setDescription(`
+Merci de respecter les règles du serveur.  
+Pour tout problème, ouvre un ticket dans <#${TICKET_CHANNEL_ID}>  
+
+**Les sanctions peuvent aller du mute au bannissement selon la gravité.**  
+**Le respect est obligatoire envers tous les membres et le staff.**  
+`)
+      .setImage("https://cdn.discordapp.com/attachments/1441925760020385915/1491652731197325402/17757081041677587786669827963131.gif")
+      .setFooter({ text: "Si vous avez un problème, n'hésitez pas à aller ici : #ticket 🎫" });
+
     channel.send({ embeds: [embed] });
   }
 
-  // ----- RECRUTEMENT -----
-  if (msg === "!recrutement") {
-    const channel = await client.channels.fetch(RECRUTEMENT_CHANNEL_ID);
-    if (!channel || !channel.isTextBased()) return;
-
-    const invites = await message.guild.invites.fetch();
-    let userInvites = 0;
-    invites.forEach(invite => {
-      if (invite.inviter && invite.inviter.id === message.author.id) userInvites += invite.uses;
-    });
-
-    if (userInvites < 3) {
-      return message.channel.send(`❌ Désolé ${message.author}, tu dois avoir **au moins 3 invitations** pour postuler au staff.`);
-    }
+  // ----- ROLES INFO -----
+  if (msg === "!rolesinfo") {
+    const channel = await client.channels.fetch("1483992112780415126");
 
     const embed = new EmbedBuilder()
-      .setTitle("Recrutement Staff")
+      .setTitle("📜 Informations des rôles - Naya")
       .setColor("#00BFFF")
-      .setDescription(`Tu souhaites faire partie du staff ? Regarde les conditions et ouvre un ticket dans <#${TICKET_CHANNEL_ID}>`)
-      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491691648411893780/17757173762299050023420614074528.gif");
+      .setDescription(`
+<@&1448188699052478554>  
+Ce rôle est attribué au créateur du serveur. Il a tous les privilèges administratifs, y compris la gestion des rôles, des canaux et des paramètres du serveur.
+
+<@&1446287927180132434>  
+Ce rôle est attribué au co-créateur du serveur. Il possède tous les privilèges administratifs, y compris la gestion des rôles, des canaux et des paramètres du serveur.
+
+<@&1478162378825924648>  
+Un administrateur a presque les mêmes pouvoirs qu'un fondateur, mais sans certains privilèges comme le transfert de propriété du serveur. Il peut gérer les membres, les rôles et les permissions.
+
+<@&1449320025453367378>  
+Le rôle de modérateur inclut des permissions comme la gestion des messages, la suppression de contenu inapproprié et l’interaction avec les membres pour assurer le respect des règles.
+
+<@&1479683496279543949>  
+L'animateur est responsable de l'animation des discussions et des événements. Il organise des jeux, concours et discussions pour garder une bonne ambiance.
+
+<@&1479683856159211613>  
+Les community managers s’occupent de la promotion du serveur (partenariats, publicités) et donnent une image positive du serveur.
+
+<@&1390086486291910726>  
+Seules les personnes de l'équipe Naya peuvent avoir ce rôle.
+
+<@&1431984265393995867>  
+Ce rôle est attribué aux membres classiques avec des permissions de base.
+
+<@&1486974281073168495>  
+Ce rôle est attribué si vous mettez \`/naya\` ou \`gg.naya\` dans votre statut. Il permet d’envoyer des gifs et images dans les vocs et offre plusieurs avantages.  
+👉 Va voir ici : <#1483992232121077930>
+
+**J'espère que les informations fournies sont claires.**
+`)
+      .setImage("https://cdn.discordapp.com/attachments/1483992446810587136/1492772818998263870/17759751427231649579972197828701.gif");
+
     channel.send({ embeds: [embed] });
   }
 
   // ----- TICKETS -----
   if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
-    if (!channel || !channel.isTextBased()) return;
 
     const embed = new EmbedBuilder()
       .setTitle("Support Naya 🎫")
       .setColor("#FFA500")
       .setDescription(`
 👑・ **Tickets Couronne**  
-🔹 Tout Ce Qui Est Professionnel, Échange De Dm4ll, Fournir Chez Nous Etc…
+🔹 Tout ce qui est professionnel, échange de Dm4ll, fournir chez nous, etc…
 
 🛡️・ **Tickets Gestion Staff**  
-🔹 Devenir Staff, Questions Relatives Aux Permissions, Demander Un Rankup / Derank Etc…
+🔹 Devenir staff, questions relatives aux permissions, demander un rankup / derank, etc…
 
 🚨・ **Tickets Gestion Abus**  
-🔹 Signaler Quelqu’un, Abus De Permission, Problème Général…
+🔹 Signaler quelqu’un, abus de permission, problème général…
 
 🎉・ **Tickets Animation**  
-🔹 Devenir Animateur / Animatrice, Questions Sur Les Animations…
+🔹 Devenir animateur / animatrice, questions sur les animations…
 
 🤝・ **Partenariat**  
-🔹 Effectuer Un Partenariat, Questions Sur Les Partenariats…
+🔹 Effectuer un partenariat, questions sur les partenariats…
 
-_Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
+_Choisis la catégorie adaptée à ta demande pour ouvrir ton ticket_
 `)
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
 
@@ -216,11 +228,11 @@ _Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
         .setCustomId("ticket_select")
         .setPlaceholder("Choisis une option")
         .addOptions([
-          { label: "👑 Tickets Couronne", value: "ticket_couronne", description: "Tout ce qui est professionnel, échange de Dm4ll, fournir chez nous etc…" },
-          { label: "🛡️ Tickets Gestion Staff", value: "ticket_staff", description: "Devenir Staff, questions sur les permissions, demander un rankup / derank etc…" },
-          { label: "🚨 Tickets Gestion Abus", value: "ticket_abus", description: "Signaler quelqu’un, abus de permission, problème général…" },
-          { label: "🎉 Tickets Animation", value: "ticket_animation", description: "Devenir animateur/animatrice, questions sur les animations…" },
-          { label: "🤝 Partenariat", value: "ticket_partenariat", description: "Effectuer un partenariat, questions sur les partenariats…" },
+          { label: "👑 Tickets Couronne", value: "ticket_couronne" },
+          { label: "🛡️ Tickets Gestion Staff", value: "ticket_staff" },
+          { label: "🚨 Tickets Gestion Abus", value: "ticket_abus" },
+          { label: "🎉 Tickets Animation", value: "ticket_animation" },
+          { label: "🤝 Partenariat", value: "ticket_partenariat" }
         ])
     );
 
@@ -229,32 +241,16 @@ _Choisis La Catégorie Adaptée À Ta Demande Pour Ouvrir Ton Ticket_
 });
 
 // =====================
-// INTERACTIONS TICKETS + FERMETURE
+// INTERACTIONS
 // =====================
 client.on("interactionCreate", async (interaction) => {
-  // -----------------
-  // Sélection de ticket
-  // -----------------
+
   if (interaction.isStringSelectMenu()) {
-    const { values, user, guild } = interaction;
-    const category = values[0];
-
-    const nameMap = {
-      ticket_staff: "gestion-staff",
-      ticket_abus: "gestion-abus",
-      ticket_couronne: "couronne",
-      ticket_animation: "animation",
-      ticket_partenariat: "partenariat"
-    };
-    const ticketName = `${nameMap[category]}-${user.username.toLowerCase()}`;
-
-    const existingChannel = guild.channels.cache.find(c => c.name === ticketName);
-    if (existingChannel) {
-      return interaction.reply({ content: "Vous avez déjà un ticket ouvert !", ephemeral: true });
-    }
+    const user = interaction.user;
+    const guild = interaction.guild;
 
     const channel = await guild.channels.create({
-      name: ticketName,
+      name: `ticket-${user.id}`,
       type: ChannelType.GuildText,
       permissionOverwrites: [
         { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
@@ -263,9 +259,8 @@ client.on("interactionCreate", async (interaction) => {
       ]
     });
 
-    // Message de bienvenue **simple** avec ping roles
     await channel.send({
-      content: `Salut ${user}, ton ticket pour **${category.replace("ticket_", "")}** est ouvert ! <@&${TICKET_HANDLER_ROLE_ID}>`,
+      content: `Salut ${user}, ton ticket est ouvert ! <@&${TICKET_HANDLER_ROLE_ID}>`,
       components: [
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -279,49 +274,56 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.reply({ content: `Ticket créé : ${channel}`, ephemeral: true });
   }
 
-  // -----------------
-  // Bouton fermer
-  // -----------------
   if (interaction.isButton() && interaction.customId === "close_ticket") {
-    if (!interaction.channel) return;
+
+    if (!interaction.member.roles.cache.has(TICKET_HANDLER_ROLE_ID)) {
+      return interaction.reply({ content: "❌ Seul le staff Naya peut fermer ce ticket.", ephemeral: true });
+    }
 
     const modal = new ModalBuilder()
-      .setCustomId(`reason_modal-${interaction.channel.id}`)
-      .setTitle("Raison de la fermeture du ticket");
+      .setCustomId("close_modal")
+      .setTitle("Raison de fermeture");
 
     const input = new TextInputBuilder()
-      .setCustomId("close_reason")
+      .setCustomId("reason")
       .setLabel("Pourquoi fermez-vous ce ticket ?")
-      .setStyle(TextInputStyle.Paragraph)
-      .setRequired(true);
+      .setStyle(TextInputStyle.Paragraph);
 
     modal.addComponents(new ActionRowBuilder().addComponents(input));
     await interaction.showModal(modal);
   }
 
-  // -----------------
-  // Modal submit pour raison
-  // -----------------
-  if (interaction.isModalSubmit() && interaction.customId.startsWith("reason_modal-")) {
-    const reason = interaction.fields.getTextInputValue("close_reason");
+  if (interaction.isModalSubmit()) {
+    const reason = interaction.fields.getTextInputValue("reason");
     const channel = interaction.channel;
+    const userId = channel.name.split("-")[1];
 
-    // Extraire l'ID du membre via le nom du salon
-    const match = channel.name.split("-").slice(-1)[0];
-    let userId = match;
+    const user = await client.users.fetch(userId).catch(() => null);
 
-    try {
-      const user = await interaction.guild.members.fetch(userId);
-      if (user) {
-        await user.send(`Ton ticket **${channel.name}** a été fermé pour la raison suivante :\n${reason}`);
-      }
-    } catch (err) {
-      console.log("Impossible d'envoyer la raison en DM :", err);
+    if (user) {
+      await user.send(`📩 Ton ticket **${channel.name}** a été fermé.\n\n📝 Raison :\n${reason}`);
     }
 
-    await interaction.reply({ content: "Ticket fermé avec succès !", ephemeral: true });
-    await channel.delete().catch(console.error);
+    const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+
+    const embed = new EmbedBuilder()
+      .setTitle("📜 Ticket fermé")
+      .setColor("#FF0000")
+      .addFields(
+        { name: "👤 Utilisateur", value: user ? `<@${user.id}>` : "Inconnu", inline: true },
+        { name: "🔒 Fermé par", value: `${interaction.user}`, inline: true },
+        { name: "📁 Ticket", value: channel.name },
+        { name: "📝 Raison", value: reason }
+      )
+      .setTimestamp();
+
+    logChannel.send({ embeds: [embed] });
+
+    await interaction.reply({ content: "✅ Ticket fermé avec succès !", ephemeral: true });
+
+    setTimeout(() => channel.delete().catch(console.error), 2000);
   }
+
 });
 
 // =====================

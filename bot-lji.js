@@ -97,24 +97,24 @@ client.on("messageCreate", async (message) => {
 
     const embed = new EmbedBuilder()
       .setColor("#000000")
-      .setTitle("🎫 Support Naya")
+      .setTitle("Support Naya")
       .setDescription(`
-👑・ **Tickets Couronne**
-🔹 Tout ce qui est professionnel, échange, etc…
+Tickets Couronne
+Tout ce qui est professionnel, échange, etc…
 
-🛡️・ **Tickets Gestion Staff**
-🔹 Devenir staff, permissions, rank…
+Tickets Gestion Staff
+Devenir staff, permissions, rank…
 
-🚨・ **Tickets Gestion Abus**
-🔹 Signalement, abus…
+Tickets Gestion Abus
+Signalement, abus…
 
-🎉・ **Tickets Animation**
-🔹 Animateur, events…
+Tickets Animation
+Animateur, events…
 
-🤝・ **Partenariat**
-🔹 Partenariat serveur…
+Partenariat
+Partenariat serveur…
 
-_Choisis une catégorie_
+Choisis une catégorie
 `)
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
 
@@ -135,14 +135,14 @@ _Choisis une catégorie_
   }
 
   // =====================
-  // REACT 1
+  // REACT 1 GENRE
   // =====================
   if (msg === "!react1") {
     const channel = await client.channels.fetch(REACT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
       .setColor("#000000")
-      .setTitle("👤 Sélectionnez votre genre")
+      .setTitle("Sélectionnez votre genre")
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492970578011885689/17760222888293576085531044650226.gif");
 
     const row = new ActionRowBuilder().addComponents(
@@ -160,18 +160,20 @@ _Choisis une catégorie_
   }
 
   // =====================
-  // REACT 2
+  // REACT 2 AGE
+  // =====================
   if (msg === "!react2") {
     const channel = await client.channels.fetch(REACT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
       .setColor("#000000")
-      .setTitle("🎂 Sélectionnez votre âge")
+      .setTitle("Sélectionnez votre âge")
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492972636844851341/17760227849791360223833108533606.gif");
 
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId("age")
+        .setPlaceholder("Choisir")
         .addOptions([
           { label: "Majeur", value: "1492989745385443560" },
           { label: "Mineur", value: "1492989803531342045" }
@@ -182,18 +184,20 @@ _Choisis une catégorie_
   }
 
   // =====================
-  // REACT 3
+  // REACT 3 SITUATION
+  // =====================
   if (msg === "!react3") {
     const channel = await client.channels.fetch(REACT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
       .setColor("#000000")
-      .setTitle("💞 Sélectionnez votre situation")
+      .setTitle("Sélectionnez votre situation")
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492994572148543518/17760280123167317692973232058489.gif");
 
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId("situation")
+        .setPlaceholder("Choisir")
         .addOptions([
           { label: "Couple", value: "1492993649141612575" },
           { label: "Célibataire", value: "1492993697627902033" },
@@ -205,21 +209,34 @@ _Choisis une catégorie_
   }
 
   // =====================
-  // REACT 4
+  // REACT 4 COULEUR
+  // =====================
   if (msg === "!react4") {
     const channel = await client.channels.fetch(REACT_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
       .setColor("#000000")
-      .setTitle("🎨 Sélectionnez une couleur")
+      .setTitle("Sélectionnez une couleur")
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1493001041233444915/17760295614282950030473050114055.gif");
 
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId("couleur")
+        .setPlaceholder("Choisir")
         .addOptions([
           { label: "Noir", value: "1492991889815765072" },
-          { label: "Blanc", value: "1492991801332863118" }
+          { label: "Blanc", value: "1492991801332863118" },
+          { label: "Gris", value: "1448233887431131146" },
+          { label: "Rouge", value: "1448056662706618430" },
+          { label: "Violet", value: "1448058153500414124" },
+          { label: "Rose", value: "1448056143736996062" },
+          { label: "Vert", value: "1448058039109160980" },
+          { label: "Jaune", value: "1448057680680718550" },
+          { label: "Orange", value: "1448233970910105691" },
+          { label: "Marron", value: "1448233601354170421" },
+          { label: "Bleu", value: "1448057514678812732" },
+          { label: "Bleu foncé", value: "1492992429454917765" },
+          { label: "Pastel", value: "1492992142904266752" }
         ])
     );
 
@@ -233,7 +250,7 @@ _Choisis une catégorie_
 // =====================
 client.on("interactionCreate", async (interaction) => {
 
-  // TICKET CREATE
+  // TICKET
   if (interaction.isStringSelectMenu() && interaction.customId === "ticket") {
 
     const type = interaction.values[0];
@@ -309,5 +326,27 @@ client.on("interactionCreate", async (interaction) => {
     setTimeout(() => channel.delete(), 2000);
   }
 
+  // REACT ROLES
+  if (interaction.isStringSelectMenu() && interaction.customId !== "ticket") {
+
+    const member = interaction.member;
+    const role = interaction.values[0];
+
+    const groups = {
+      genre: ["1398475032480583821","1398475137678049370","1441952406685352208"],
+      age: ["1492989745385443560","1492989803531342045"],
+      situation: ["1492993649141612575","1492993697627902033","1492993754225705070"],
+      couleur: ["1492991889815765072","1492991801332863118","1448233887431131146","1448056662706618430","1448058153500414124","1448056143736996062","1448058039109160980","1448057680680718550","1448233970910105691","1448233601354170421","1448057514678812732","1492992429454917765","1492992142904266752"]
+    };
+
+    if (groups[interaction.customId]) {
+      await member.roles.remove(groups[interaction.customId]);
+      await member.roles.add(role);
+
+      interaction.reply({ content: "✅ Rôle ajouté", ephemeral: true });
+    }
+  }
+
 });
+
 client.login(process.env.DISCORD_TOKEN);

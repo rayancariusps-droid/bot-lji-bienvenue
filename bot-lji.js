@@ -1,13 +1,10 @@
-// =====================
-// CONFIG
-// =====================
 require("dotenv").config();
 const express = require("express");
-const { 
-  Client, 
-  GatewayIntentBits, 
-  EmbedBuilder, 
-  ActionRowBuilder, 
+const {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  ActionRowBuilder,
   StringSelectMenuBuilder,
   ChannelType,
   ButtonBuilder,
@@ -18,13 +15,11 @@ const {
 } = require("discord.js");
 
 // =====================
-// SERVEUR WEB
+// WEB
 // =====================
 const app = express();
-app.get("/", (req, res) => res.send("Bot Naya en ligne"));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
+app.get("/", (req, res) => res.send("Bot en ligne"));
+app.listen(3000);
 
 // =====================
 // CLIENT
@@ -32,9 +27,9 @@ app.listen(PORT, () => console.log("Serveur web actif sur le port " + PORT));
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences
   ]
 });
@@ -42,51 +37,37 @@ const client = new Client({
 // =====================
 // IDS
 // =====================
-const WELCOME_CHANNEL_ID = "1483601884165181604";
-const ROLES_CHANNEL_ID = "1483992171538550935";
-const STATUS_ROLE_ID = "1486974281073168495";
 const TICKET_CHANNEL_ID = "1483599648018006150";
 const LOG_CHANNEL_ID = "1492774051549020180";
-const TICKET_HANDLER_ROLE_ID = "1390086486291910726";
-const WELCOME_ROLE_ID = "1479358568091357234";
+const REACT_CHANNEL_ID = "1483992171538550935";
+const STAFF_ROLE = "1390086486291910726";
+const STATUS_ROLE = "1486974281073168495";
 
 // =====================
 // READY
 // =====================
 client.once("ready", () => {
-  console.log(`Connecté en tant que ${client.user.tag}`);
+  console.log(`Connecté : ${client.user.tag}`);
 });
 
 // =====================
-// WELCOME
-// =====================
-client.on("guildMemberAdd", async (member) => {
-  const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID);
-  if (!channel) return;
-
-  channel.send(
-    `Bienvenue sur **Naya ❄️** ${member} ! Nous sommes maintenant **${member.guild.memberCount}** membres. Prends tes rôles ici : <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>`
-  );
-});
-
-// =====================
-// STATUT ROLE
+// ROLE NAYA (STATUT)
 // =====================
 client.on("presenceUpdate", async (oldPresence, newPresence) => {
   if (!newPresence || !newPresence.member) return;
 
   const member = newPresence.member;
-  const customStatus = member.presence?.activities.find(a => a.type === 4);
-  const text = customStatus?.state?.toLowerCase() || "";
+  const custom = member.presence?.activities.find(a => a.type === 4);
+  const text = custom?.state?.toLowerCase() || "";
 
   const has = text.includes("/naya") || text.includes("gg.naya");
 
-  if (has && !member.roles.cache.has(STATUS_ROLE_ID)) {
-    await member.roles.add(STATUS_ROLE_ID);
+  if (has && !member.roles.cache.has(STATUS_ROLE)) {
+    member.roles.add(STATUS_ROLE).catch(() => {});
   }
 
-  if (!has && member.roles.cache.has(STATUS_ROLE_ID)) {
-    await member.roles.remove(STATUS_ROLE_ID);
+  if (!has && member.roles.cache.has(STATUS_ROLE)) {
+    member.roles.remove(STATUS_ROLE).catch(() => {});
   }
 });
 
@@ -99,8 +80,8 @@ client.on("messageCreate", async (message) => {
 
   // ping
   if (msg === "!ping") {
-    const sent = await message.channel.send("Pong");
-    sent.edit(`🏓 ${sent.createdTimestamp - message.createdTimestamp}ms`);
+    const m = await message.channel.send("Pong");
+    m.edit(`🏓 ${m.createdTimestamp - message.createdTimestamp}ms`);
   }
 
   // membres
@@ -108,84 +89,143 @@ client.on("messageCreate", async (message) => {
     message.channel.send(`👥 ${message.guild.memberCount} membres`);
   }
 
-  // roles info
-  if (msg === "!rolesinfo") {
-    const channel = await client.channels.fetch("1483992112780415126");
-
-    const embed = new EmbedBuilder()
-      .setTitle("📜 Informations des rôles - Naya")
-      .setColor("#00BFFF")
-      .setDescription(`
-<@&1448188699052478554>  
-Ce rôle est attribué au créateur du serveur. Il a tous les privilèges administratifs, y compris la gestion des rôles, des canaux et des paramètres du serveur.
-
-<@&1478162378825924648>  
-Un administrateur a presque les mêmes pouvoirs qu'un fondateur, mais sans certains privilèges comme le transfert de propriété du serveur. Il peut gérer les membres, les rôles et les permissions.
-
-<@&1449320025453367378>  
-Le rôle de modérateur inclut des permissions comme la gestion des messages, la suppression de contenu inapproprié et l’interaction avec les membres pour assurer le respect des règles.
-
-<@&1479683496279543949>  
-L'animateur est responsable de l'animation des discussions et des événements. Il organise des jeux, concours et discussions pour garder une bonne ambiance.
-
-<@&1479683856159211613>  
-Les community managers s’occupent de la promotion du serveur (partenariats, publicités) et donnent une image positive du serveur.
-
-<@&1390086486291910726>  
-Seules les personnes de l'équipe Naya peuvent avoir ce rôle.
-
-<@&1431984265393995867>  
-Ce rôle est attribué aux membres classiques avec des permissions de base.
-
-**J'espère que les informations fournies sont claires.**
-`)
-      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492931988041236750/17760131015903024058531000763866.gif");
-
-    channel.send({ embeds: [embed] });
-  }
-
-  // ticket
+  // =====================
+  // PANEL TICKET
+  // =====================
   if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
-      .setTitle("Support Naya 🎫")
-      .setColor("#FFA500")
+      .setColor("#000000")
+      .setTitle("🎫 Support Naya")
       .setDescription(`
-👑・ **Tickets Couronne**  
-🔹 Tout ce qui est professionnel, échange de Dm4ll, fournir chez nous, etc…
+👑・ **Tickets Couronne**
+🔹 Tout ce qui est professionnel, échange, etc…
 
-🛡️・ **Tickets Gestion Staff**  
-🔹 Devenir staff, questions relatives aux permissions, demander un rankup / derank, etc…
+🛡️・ **Tickets Gestion Staff**
+🔹 Devenir staff, permissions, rank…
 
-🚨・ **Tickets Gestion Abus**  
-🔹 Signaler quelqu’un, abus de permission, problème général…
+🚨・ **Tickets Gestion Abus**
+🔹 Signalement, abus…
 
-🎉・ **Tickets Animation**  
-🔹 Devenir animateur / animatrice, questions sur les animations…
+🎉・ **Tickets Animation**
+🔹 Animateur, events…
 
-🤝・ **Partenariat**  
-🔹 Effectuer un partenariat, questions sur les partenariats…
+🤝・ **Partenariat**
+🔹 Partenariat serveur…
 
-_Choisis la catégorie adaptée à ta demande pour ouvrir ton ticket_
+_Choisis une catégorie_
 `)
       .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
 
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
-        .setCustomId("ticket_select")
-        .setPlaceholder("Choisis une option")
+        .setCustomId("ticket")
+        .setPlaceholder("Choisir une raison")
         .addOptions([
-          { label: "👑 Tickets Couronne", value: "couronne" },
-          { label: "🛡️ Tickets Gestion Staff", value: "staff" },
-          { label: "🚨 Tickets Gestion Abus", value: "abus" },
-          { label: "🎉 Tickets Animation", value: "animation" },
-          { label: "🤝 Partenariat", value: "partenariat" }
+          { label: "Couronne", value: "couronne" },
+          { label: "Gestion Staff", value: "staff" },
+          { label: "Gestion Abus", value: "abus" },
+          { label: "Animation", value: "animation" },
+          { label: "Partenariat", value: "partenariat" }
         ])
     );
 
     channel.send({ embeds: [embed], components: [row] });
   }
+
+  // =====================
+  // REACT 1
+  // =====================
+  if (msg === "!react1") {
+    const channel = await client.channels.fetch(REACT_CHANNEL_ID);
+
+    const embed = new EmbedBuilder()
+      .setColor("#000000")
+      .setTitle("👤 Sélectionnez votre genre")
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492970578011885689/17760222888293576085531044650226.gif");
+
+    const row = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId("genre")
+        .setPlaceholder("Choisir")
+        .addOptions([
+          { label: "Homme", value: "1398475032480583821" },
+          { label: "Femme", value: "1398475137678049370" },
+          { label: "Non binaire", value: "1441952406685352208" }
+        ])
+    );
+
+    channel.send({ embeds: [embed], components: [row] });
+  }
+
+  // =====================
+  // REACT 2
+  if (msg === "!react2") {
+    const channel = await client.channels.fetch(REACT_CHANNEL_ID);
+
+    const embed = new EmbedBuilder()
+      .setColor("#000000")
+      .setTitle("🎂 Sélectionnez votre âge")
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492972636844851341/17760227849791360223833108533606.gif");
+
+    const row = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId("age")
+        .addOptions([
+          { label: "Majeur", value: "1492989745385443560" },
+          { label: "Mineur", value: "1492989803531342045" }
+        ])
+    );
+
+    channel.send({ embeds: [embed], components: [row] });
+  }
+
+  // =====================
+  // REACT 3
+  if (msg === "!react3") {
+    const channel = await client.channels.fetch(REACT_CHANNEL_ID);
+
+    const embed = new EmbedBuilder()
+      .setColor("#000000")
+      .setTitle("💞 Sélectionnez votre situation")
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1492994572148543518/17760280123167317692973232058489.gif");
+
+    const row = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId("situation")
+        .addOptions([
+          { label: "Couple", value: "1492993649141612575" },
+          { label: "Célibataire", value: "1492993697627902033" },
+          { label: "Compliqué", value: "1492993754225705070" }
+        ])
+    );
+
+    channel.send({ embeds: [embed], components: [row] });
+  }
+
+  // =====================
+  // REACT 4
+  if (msg === "!react4") {
+    const channel = await client.channels.fetch(REACT_CHANNEL_ID);
+
+    const embed = new EmbedBuilder()
+      .setColor("#000000")
+      .setTitle("🎨 Sélectionnez une couleur")
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1493001041233444915/17760295614282950030473050114055.gif");
+
+    const row = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId("couleur")
+        .addOptions([
+          { label: "Noir", value: "1492991889815765072" },
+          { label: "Blanc", value: "1492991801332863118" }
+        ])
+    );
+
+    channel.send({ embeds: [embed], components: [row] });
+  }
+
 });
 
 // =====================
@@ -193,88 +233,81 @@ _Choisis la catégorie adaptée à ta demande pour ouvrir ton ticket_
 // =====================
 client.on("interactionCreate", async (interaction) => {
 
-  if (interaction.isStringSelectMenu()) {
-    const user = interaction.user;
-    const guild = interaction.guild;
+  // TICKET CREATE
+  if (interaction.isStringSelectMenu() && interaction.customId === "ticket") {
 
-    const channel = await guild.channels.create({
-      name: `ticket-${user.id}`,
+    const type = interaction.values[0];
+    const user = interaction.user;
+    const clean = user.username.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    const channel = await interaction.guild.channels.create({
+      name: `${type}-${clean}`,
       type: ChannelType.GuildText,
       permissionOverwrites: [
-        { id: guild.roles.everyone.id, deny: ["ViewChannel"] },
+        { id: interaction.guild.roles.everyone.id, deny: ["ViewChannel"] },
         { id: user.id, allow: ["ViewChannel", "SendMessages"] },
-        { id: TICKET_HANDLER_ROLE_ID, allow: ["ViewChannel", "SendMessages", "ManageChannels"] }
+        { id: STAFF_ROLE, allow: ["ViewChannel", "SendMessages"] }
       ]
     });
 
     await channel.send({
-      content: `Salut ${user}, ton ticket est ouvert ! <@&${TICKET_HANDLER_ROLE_ID}>`,
+      content: `Ticket ${type} ouvert ${user} <@&${STAFF_ROLE}>`,
       components: [
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId("close_ticket")
-            .setLabel("Fermer le ticket")
+            .setCustomId("close")
+            .setLabel("Fermer")
             .setStyle(ButtonStyle.Danger)
         )
       ]
     });
 
-    await interaction.reply({ content: `Ticket créé : ${channel}`, ephemeral: true });
+    interaction.reply({ content: `✅ ${channel}`, ephemeral: true });
   }
 
-  if (interaction.isButton() && interaction.customId === "close_ticket") {
+  // CLOSE BUTTON
+  if (interaction.isButton() && interaction.customId === "close") {
 
-    if (!interaction.member.roles.cache.has(TICKET_HANDLER_ROLE_ID)) {
-      return interaction.reply({ content: "❌ Seul le staff Naya peut fermer ce ticket.", ephemeral: true });
+    if (!interaction.member.roles.cache.has(STAFF_ROLE)) {
+      return interaction.reply({ content: "❌ Staff uniquement", ephemeral: true });
     }
 
     const modal = new ModalBuilder()
-      .setCustomId("close_modal")
-      .setTitle("Raison de fermeture");
+      .setCustomId("closeModal")
+      .setTitle("Raison");
 
     const input = new TextInputBuilder()
       .setCustomId("reason")
-      .setLabel("Pourquoi fermez-vous ce ticket ?")
+      .setLabel("Pourquoi ?")
       .setStyle(TextInputStyle.Paragraph);
 
     modal.addComponents(new ActionRowBuilder().addComponents(input));
     await interaction.showModal(modal);
   }
 
+  // CLOSE SUBMIT
   if (interaction.isModalSubmit()) {
+
     const reason = interaction.fields.getTextInputValue("reason");
     const channel = interaction.channel;
-    const userId = channel.name.split("-")[1];
 
-    const user = await client.users.fetch(userId).catch(() => null);
-
-    if (user) {
-      await user.send(`📩 Ton ticket **${channel.name}** a été fermé.\n\n📝 Raison :\n${reason}`);
-    }
-
-    const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+    const log = await client.channels.fetch(LOG_CHANNEL_ID);
 
     const embed = new EmbedBuilder()
-      .setTitle("📜 Ticket fermé")
-      .setColor("#FF0000")
+      .setColor("#000000")
+      .setTitle("Ticket fermé")
       .addFields(
-        { name: "👤 Utilisateur", value: user ? `<@${user.id}>` : "Inconnu", inline: true },
-        { name: "🔒 Fermé par", value: `${interaction.user}`, inline: true },
-        { name: "📁 Ticket", value: channel.name },
-        { name: "📝 Raison", value: reason }
-      )
-      .setTimestamp();
+        { name: "Staff", value: `${interaction.user}` },
+        { name: "Salon", value: channel.name },
+        { name: "Raison", value: reason }
+      );
 
-    logChannel.send({ embeds: [embed] });
+    log.send({ embeds: [embed] });
 
-    await interaction.reply({ content: "✅ Ticket fermé avec succès !", ephemeral: true });
+    interaction.reply({ content: "✅ Fermé", ephemeral: true });
 
-    setTimeout(() => channel.delete().catch(console.error), 2000);
+    setTimeout(() => channel.delete(), 2000);
   }
 
 });
-
-// =====================
-// LOGIN
-// =====================
 client.login(process.env.DISCORD_TOKEN);

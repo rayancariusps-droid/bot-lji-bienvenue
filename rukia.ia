@@ -1,225 +1,335 @@
-import json
-import time
-import asyncio
-import sqlite3
-from pathlib import Path
-from collections import defaultdict
-from fastapi import FastAPI
-import uvicorn
+require("dotenv").config();
+const {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  PermissionFlagsBits
+} = require("discord.js");
 
-# =========================
-# RUKIA IA — OVER GOD CORE
-# =========================
+const sqlite3 = require("sqlite3").verbose();
 
-class RukiaIA:
-    def __init__(self, db_path="rukia_overgod.db"):
-        self.name = "Rukia IA OVER GOD"
-        self.db_path = db_path
+// =========================
+// CLIENT
+// =========================
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
 
-        # Runtime systems
-        self.active_rooms = set()
-        self.user_memory = defaultdict(dict)
-        self.last_msg = defaultdict(float)
-        self.cooldown = 0.8
+// =========================
+// DB
+// =========================
+const db = new sqlite3.Database("rukia_full_god.db");
 
-        # Init DB
-        self.db = sqlite3.connect(self.db_path)
-        self.cursor = self.db.cursor()
-        self.init_db()
+db.run(`CREATE TABLE IF NOT EXISTS rooms (channel TEXT)`);
+db.run(`CREATE TABLE IF NOT EXISTS memory (user TEXT, msg TEXT, time REAL)`);
 
-        # Command router (ultra fast)
-        self.commands = {
-            "/on": self.cmd_on,
-            "/off": self.cmd_off,
-            "/ping": self.cmd_ping
-        }
+// =========================
+// SYSTEM
+// =========================
+const activeRooms = new Set();
+const memory = {};
+const cooldown = new Map();
 
-        # Brain v1
-        self.brain = {
-            "bonjour": "👋 Salut, je suis Rukia OVER GOD",
-            "ton nom": "Rukia IA OVER GOD MODE",
-            "aide": "Je suis une IA modulaire connectée à API + DB + plugins",
-        }
+// =========================
+// LOAD ROOMS
+// =========================
+db.all("SELECT channel FROM rooms", [], (e, r) => {
+  r?.forEach(x => activeRooms.add(x.channel));
+});
 
-        # Plugins
-        self.plugins = []
+// =========================
+// RANDOM
+// =========================
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-        # Load memory
-        self.load_state()
+// =========================
+// MEMORY SYSTEM
+// =========================
+function saveMemory(user, msg) {
+  if (!memory[user]) memory[user] = [];
+  memory[user].push(msg);
+  if (memory[user].length > 25) memory[user].shift();
 
-    # =========================
-    # DATABASE LAYER
-    # =========================
+  db.run("INSERT INTO memory VALUES (?,?,?)", [user, msg, Date.now()]);
+}
 
-    def init_db(self):
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            room TEXT,
-            user TEXT,
-            message TEXT,
-            timestamp REAL
-        )
-        """)
+function getContext(user) {
+  return memory[user]?.slice(-10).join(" | ") || "vide";
+}
 
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS memory (
-            user TEXT,
-            key TEXT,
-            value TEXT
-        )
-        """)
-        self.db.commit()
+// =========================
+// RUKIA BRAIN AI
+// =========================
+function brain(msg, user) {
+  const text = msg.toLowerCase();
+  const ctx = getContext(user);
 
-    def log_db(self, room, user, message):
-        self.cursor.execute(
-            "INSERT INTO logs (room,user,message,timestamp) VALUES (?,?,?,?)",
-            (room, user, message, time.time())
-        )
-        self.db.commit()
+  saveMemory(user, msg);
 
-    # =========================
-    # MEMORY SYSTEM
-    # =========================
+  if (text.includes("bonjour")) {
+    return random([
+      "👑 Bonjour humain.",
+      "⚡ Salut… analyse en cours.",
+      "🤖 Bonjour. Rukia active."
+    ]);
+  }
 
-    def remember(self, user, key, value):
-        self.user_memory[user][key] = value
-        self.cursor.execute(
-            "INSERT INTO memory (user,key,value) VALUES (?,?,?)",
-            (user, key, value)
-        )
-        self.db.commit()
+  if (text.includes("qui suis je")) {
+    return `🧠 Mémoire: ${ctx}`;
+  }
 
-    def recall(self, user, key):
-        return self.user_memory.get(user, {}).get(key)
+  if (text.includes("rukia")) {
+    return random(["⚡ Oui ?", "👑 Je t’écoute.", "🤖 Présente."]);
+  }
 
-    # =========================
-    # COMMAND SYSTEM
-    # =========================
+  if (text.includes("je t'aime")) {
+    return random(["💔 rejeté.", "😒 non.", "⚡ erreur émotion"]);
+  }
 
-    def cmd_on(self, room):
-        self.active_rooms.add(room)
-        return f"⚡ Rukia ON dans {room}"
+  const responses = [
+    `🧠 Analyse: ${ctx}`,
+    `⚡ Traitement: "${msg}"`,
+    `👑 Observation utilisateur`,
+    `🤖 Résultat IA → ${ctx}`
+  ];
 
-    def cmd_off(self, room):
-        self.active_rooms.discard(room)
-        return f"❌ Rukia OFF dans {room}"
+  return random(responses);
+}
 
-    def cmd_ping(self, room):
-        return "🏓 PONG OVER GOD"
+// =========================
+// SLASH COMMANDS
+// =========================
+const commands = [
 
-    def handle_command(self, room, msg):
-        return self.commands.get(msg, lambda r: None)(room)
+  new SlashCommandBuilder().setName("on").setDescription("active rukia"),
+  new SlashCommandBuilder().setName("off").setDescription("désactive rukia"),
 
-    # =========================
-    # PLUGINS
-    # =========================
+  new SlashCommandBuilder().setName("memory"),
+  new SlashCommandBuilder().setName("forget"),
+  new SlashCommandBuilder().setName("profile"),
 
-    def register_plugin(self, fn):
-        self.plugins.append(fn)
+  new SlashCommandBuilder().setName("avatar")
+    .addUserOption(o => o.setName("user")),
 
-    def run_plugins(self, msg, room, user):
-        for p in self.plugins:
-            out = p(msg, room, user, self)
-            if out:
-                return out
-        return None
+  new SlashCommandBuilder().setName("userinfo")
+    .addUserOption(o => o.setName("user")),
 
-    # =========================
-    # BRAIN
-    # =========================
+  new SlashCommandBuilder().setName("serverinfo"),
 
-    def think(self, msg):
-        msg = msg.lower()
-        for k, v in self.brain.items():
-            if k in msg:
-                return v
-        return "🤖 Je réfléchis..."
+  new SlashCommandBuilder().setName("say")
+    .addStringOption(o => o.setName("text").setRequired(true)),
 
-    # =========================
-    # CORE HANDLER
-    # =========================
+  new SlashCommandBuilder().setName("dice"),
+  new SlashCommandBuilder().setName("coinflip"),
 
-    async def handle_message(self, room, user, msg):
+  new SlashCommandBuilder().setName("ppsize")
+    .addUserOption(o => o.setName("user")),
 
-        # anti spam
-        now = time.time()
-        if now - self.last_msg[user] < self.cooldown:
-            return "⏳ Cooldown actif"
-        self.last_msg[user] = now
+  new SlashCommandBuilder().setName("ship")
+    .addUserOption(o => o.setName("u1").setRequired(true))
+    .addUserOption(o => o.setName("u2").setRequired(true)),
 
-        # log
-        self.log_db(room, user, msg)
+  new SlashCommandBuilder().setName("kick")
+    .addUserOption(o => o.setName("user").setRequired(true))
+    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
 
-        # commands
-        cmd = self.handle_command(room, msg)
-        if cmd:
-            return cmd
+  new SlashCommandBuilder().setName("ban")
+    .addUserOption(o => o.setName("user").setRequired(true))
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
 
-        # room gate
-        if room not in self.active_rooms:
-            return "IA OFF"
+  new SlashCommandBuilder().setName("timeout")
+    .addUserOption(o => o.setName("user").setRequired(true))
+    .addIntegerOption(o => o.setName("time").setRequired(true))
+    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
-        # plugins
-        plug = self.run_plugins(msg, room, user)
-        if plug:
-            return plug
+  new SlashCommandBuilder().setName("purge")
+    .addIntegerOption(o => o.setName("amount").setRequired(true))
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
-        # memory trigger
-        if "je m'appelle" in msg.lower():
-            name = msg.split("je m'appelle")[-1].strip()
-            self.remember(user, "name", name)
-            return f"Enchanté {name} 👑"
+  new SlashCommandBuilder().setName("ask")
+    .addStringOption(o => o.setName("q").setRequired(true)),
 
-        return self.think(msg)
+  new SlashCommandBuilder().setName("insult")
+    .addUserOption(o => o.setName("user").setRequired(true)),
 
-    # =========================
-    # STATE LOAD
-    # =========================
+  new SlashCommandBuilder().setName("compliment")
+    .addUserOption(o => o.setName("user").setRequired(true)),
 
-    def load_state(self):
-        rows = self.cursor.execute("SELECT user,key,value FROM memory").fetchall()
-        for u, k, v in rows:
-            self.user_memory[u][k] = v
+].map(c => c.toJSON());
 
-    # =========================
-    # CLI
-    # =========================
+// =========================
+// REGISTER
+// =========================
+client.once("ready", async () => {
+  console.log("👑 RUKIA 7.5 GOD FULL ONLINE");
 
-    def chat(self):
-        print("👑 RUKIA OVER GOD ONLINE")
-        while True:
-            room = input("Room: ")
-            user = input("User: ")
-            msg = input("Msg: ")
-            print(asyncio.run(self.handle_message(room, user, msg)))
+  const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
+  await rest.put(
+    Routes.applicationCommands(client.user.id),
+    { body: commands }
+  );
+});
 
-# =========================
-# FASTAPI WEB LAYER
-# =========================
+// =========================
+// INTERACTIONS
+// =========================
+client.on("interactionCreate", async (i) => {
+  if (!i.isChatInputCommand()) return;
 
-app = FastAPI()
-bot = RukiaIA()
+  const ch = i.channelId;
+  const user = i.user.id;
 
-@app.get("/chat")
-async def chat(room: str, user: str, msg: str):
-    return {"response": await bot.handle_message(room, user, msg)}
+  // ON / OFF
+  if (i.commandName === "on") {
+    activeRooms.add(ch);
+    db.run("INSERT INTO rooms VALUES (?)", [ch]);
+    return i.reply("⚡ Rukia ON");
+  }
 
-# =========================
-# PLUGIN EXAMPLE
-# =========================
+  if (i.commandName === "off") {
+    activeRooms.delete(ch);
+    db.run("DELETE FROM rooms WHERE channel=?", [ch]);
+    return i.reply("❌ Rukia OFF");
+  }
 
-def joke_plugin(msg, room, user, bot):
-    if "blague" in msg.lower():
-        return "😂 Les IA rêvent de RAM infinie"
+  // MEMORY
+  if (i.commandName === "memory") {
+    return i.reply(`🧠 ${getContext(user)}`);
+  }
 
-bot.register_plugin(joke_plugin)
+  if (i.commandName === "forget") {
+    memory[user] = [];
+    db.run("DELETE FROM memory WHERE user=?", [user]);
+    return i.reply("🗑️ mémoire supprimée");
+  }
 
-# =========================
-# RUN SERVER
-# =========================
+  if (i.commandName === "profile") {
+    return i.reply(`👑 Messages: ${memory[user]?.length || 0}`);
+  }
 
-if __name__ == "__main__":
-    print("🚀 Starting OVER GOD Rukia...")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+  // AVATAR
+  if (i.commandName === "avatar") {
+    const u = i.options.getUser("user") || i.user;
+    return i.reply({
+      embeds: [{
+        image: { url: u.displayAvatarURL({ size: 4096 }) }
+      }]
+    });
+  }
+
+  // USERINFO
+  if (i.commandName === "userinfo") {
+    const u = i.options.getUser("user") || i.user;
+    const m = await i.guild.members.fetch(u.id);
+
+    return i.reply(`👤 ${u.username}\nID: ${u.id}\nRoles: ${m.roles.cache.size}`);
+  }
+
+  // SERVERINFO
+  if (i.commandName === "serverinfo") {
+    const g = i.guild;
+    return i.reply(`🏠 ${g.name}\nMembers: ${g.memberCount}`);
+  }
+
+  // SAY
+  if (i.commandName === "say") {
+    return i.reply(i.options.getString("text"));
+  }
+
+  // DICE
+  if (i.commandName === "dice") {
+    return i.reply(`🎲 ${Math.floor(Math.random() * 6) + 1}`);
+  }
+
+  // COIN
+  if (i.commandName === "coinflip") {
+    return i.reply(Math.random() > 0.5 ? "🪙 PILE" : "🪙 FACE");
+  }
+
+  // PPSIZE
+  if (i.commandName === "ppsize") {
+    const u = i.options.getUser("user") || i.user;
+    return i.reply(`🍆 ${u.username}: 8${"=".repeat(Math.floor(Math.random()*15))}D`);
+  }
+
+  // SHIP
+  if (i.commandName === "ship") {
+    const u1 = i.options.getUser("u1");
+    const u2 = i.options.getUser("u2");
+    return i.reply(`💞 ${u1.username} x ${u2.username} = ${Math.floor(Math.random()*100)}%`);
+  }
+
+  // MODERATION
+  if (i.commandName === "kick") {
+    const u = i.options.getUser("user");
+    const m = await i.guild.members.fetch(u.id);
+    await m.kick();
+    return i.reply(`👢 ${u.username} kick`);
+  }
+
+  if (i.commandName === "ban") {
+    const u = i.options.getUser("user");
+    const m = await i.guild.members.fetch(u.id);
+    await m.ban();
+    return i.reply(`🔨 ${u.username} ban`);
+  }
+
+  if (i.commandName === "timeout") {
+    const u = i.options.getUser("user");
+    const t = i.options.getInteger("time");
+    const m = await i.guild.members.fetch(u.id);
+    await m.timeout(t * 1000);
+    return i.reply(`⏳ ${u.username} timeout`);
+  }
+
+  if (i.commandName === "purge") {
+    const a = i.options.getInteger("amount");
+    const msgs = await i.channel.bulkDelete(a);
+    return i.reply(`🧹 ${msgs.size} messages`);
+  }
+
+  // FUN IA
+  if (i.commandName === "ask") {
+    return i.reply(brain(i.options.getString("q"), user));
+  }
+
+  if (i.commandName === "insult") {
+    const u = i.options.getUser("user");
+    const arr = ["nul", "bug humain", "erreur système"];
+    return i.reply(`🔥 ${u.username}: ${random(arr)}`);
+  }
+
+  if (i.commandName === "compliment") {
+    const u = i.options.getUser("user");
+    const arr = ["incroyable", "presque intelligent", "validé"];
+    return i.reply(`✨ ${u.username}: ${random(arr)}`);
+  }
+});
+
+// =========================
+// MESSAGE SYSTEM
+// =========================
+client.on("messageCreate", (m) => {
+  if (m.author.bot) return;
+  if (!activeRooms.has(m.channelId)) return;
+
+  const now = Date.now();
+  if (cooldown.get(m.author.id) && now - cooldown.get(m.author.id) < 900) return;
+  cooldown.set(m.author.id, now);
+
+  m.reply(brain(m.content, m.author.id));
+});
+
+// =========================
+// LOGIN
+// =========================
+client.login(process.env.TOKEN);

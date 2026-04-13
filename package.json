@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const {
 Client,
@@ -6,13 +7,6 @@ GatewayIntentBits,
 EmbedBuilder,
 ActionRowBuilder,
 StringSelectMenuBuilder,
-ButtonBuilder,
-ButtonStyle,
-ModalBuilder,
-TextInputBuilder,
-TextInputStyle,
-ChannelType,
-PermissionsBitField,
 REST,
 Routes,
 SlashCommandBuilder
@@ -30,10 +24,10 @@ const ytdl = require("ytdl-core");
 const play = require("play-dl");
 
 // =====================
-// KEEP ALIVE
+// EXPRESS
 // =====================
 const app = express();
-app.get("/", (_, res) => res.send("Bot OK"));
+app.get("/", (_, res) => res.send("OK"));
 app.listen(process.env.PORT || 3000);
 
 // =====================
@@ -45,36 +39,22 @@ GatewayIntentBits.Guilds,
 GatewayIntentBits.GuildMessages,
 GatewayIntentBits.MessageContent,
 GatewayIntentBits.GuildMembers,
-GatewayIntentBits.GuildPresences,
 GatewayIntentBits.GuildVoiceStates
 ]
 });
 
 // =====================
-// IDS
-// =====================
-const IDS = {
-WELCOME: "1483601884165181604",
-ROLES: "1483992171538550935",
-WELCOME_ROLE: "1479358568091357234",
-TICKET: "1483599648018006150",
-LOG: "1492774051549020180",
-STATUS: "1486974281073168495"
-};
-
-// =====================
 // SYSTEM
 // =====================
-const ai = new Set();
-const spam = new Map();
+const aiChannels = new Set();
 const queues = new Map();
 
 // =====================
 // MUSIC SAFE
 // =====================
-function getQueue(guildId) {
-if (!queues.has(guildId)) {
-queues.set(guildId, {
+function getQueue(id) {
+if (!queues.has(id)) {
+queues.set(id, {
 songs: [],
 loop: false,
 shuffle: false,
@@ -83,21 +63,12 @@ player: createAudioPlayer({ behaviors: NoSubscriberBehavior.Play }),
 connection: null
 });
 }
-return queues.get(guildId);
-}
-
-function shuffle(arr) {
-for (let i = arr.length - 1; i > 0; i--) {
-const j = Math.floor(Math.random() * (i + 1));
-[arr[i], arr[j]] = [arr[j], arr[i]];
-}
+return queues.get(id);
 }
 
 async function playNext(guild) {
 const q = getQueue(guild.id);
 if (!q.songs.length) return q.playing = false;
-
-if (q.shuffle) shuffle(q.songs);
 
 const song = q.songs.shift();
 
@@ -112,77 +83,77 @@ q.player.once(AudioPlayerStatus.Idle, () => {
 if (q.loop) q.songs.push(song);
 playNext(guild);
 });
+
 } catch (e) {
-console.log("music error", e);
+console.log(e);
 playNext(guild);
 }
 }
 
 // =====================
-// SLASH COMMANDS SAFE
+// SLASH COMMANDS (FIXED)
 // =====================
 const commands = [
 new SlashCommandBuilder()
 .setName("play")
-.setDescription("Play music")
+.setDescription("Play a song")
 .addStringOption(o =>
 o.setName("query")
-.setDescription("song")
+.setDescription("song name or url")
 .setRequired(true)
 ),
 
-new SlashCommandBuilder().setName("skip").setDescription("Skip"),
-new SlashCommandBuilder().setName("stop").setDescription("Stop"),
-new SlashCommandBuilder().setName("loop").setDescription("Loop"),
-new SlashCommandBuilder().setName("shuffle").setDescription("Shuffle"),
-new SlashCommandBuilder().setName("ai").setDescription("AI ON/OFF")
+new SlashCommandBuilder()
+.setName("skip")
+.setDescription("Skip song"),
+
+new SlashCommandBuilder()
+.setName("stop")
+.setDescription("Stop music"),
+
+new SlashCommandBuilder()
+.setName("loop")
+.setDescription("Toggle loop"),
+
+new SlashCommandBuilder()
+.setName("shuffle")
+.setDescription("Toggle shuffle"),
+
+new SlashCommandBuilder()
+.setName("ai")
+.setDescription("Toggle AI")
 ].map(c => c.toJSON());
 
 // =====================
 // READY
 // =====================
 client.once("ready", async () => {
-console.log(`Logged as ${client.user.tag}`);
+console.log("Bot ready");
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
+try {
 await rest.put(
 Routes.applicationCommands(client.user.id),
 { body: commands }
 );
-});
-
-// =====================
-// WELCOME FIX
-// =====================
-client.on("guildMemberAdd", async (m) => {
-const role = m.guild.roles.cache.get(IDS.WELCOME_ROLE);
-if (role) m.roles.add(role).catch(()=>{});
-
-const ch = await m.guild.channels.fetch(IDS.WELCOME).catch(()=>null);
-
-if (ch) {
-ch.send(`Bienvenue ${m} ❄️`);
+console.log("Slash OK");
+} catch (e) {
+console.log(e);
 }
 });
 
 // =====================
-// INTERACTIONS FIX (IMPORTANT)
+// INTERACTIONS SAFE
 // =====================
 client.on("interactionCreate", async (i) => {
-
 try {
 
-// BUTTON / SELECT (tickets etc)
-if (i.isStringSelectMenu()) {
-return i.reply({ content: "Select OK", ephemeral: true });
-}
-
-// SLASH ONLY
-if (i.isChatInputCommand()) {
+if (!i.isChatInputCommand()) return;
 
 const q = getQueue(i.guild.id);
 
+// PLAY
 if (i.commandName === "play") {
 
 const vc = i.member.voice.channel;
@@ -193,7 +164,7 @@ let url = query;
 
 if (!ytdl.validateURL(query)) {
 const s = await play.search(query, { limit: 1 });
-if (!s.length) return i.reply("Not found");
+if (!s.length) return i.reply("Introuvable");
 url = s[0].url;
 }
 
@@ -211,25 +182,42 @@ conn.subscribe(q.player);
 playNext(i.guild);
 }
 
-return i.reply("Added");
+return i.reply("Ajouté");
 }
 
-if (i.commandName === "skip") q.player.stop();
-if (i.commandName === "stop") { q.songs = []; q.player.stop(); }
-if (i.commandName === "loop") q.loop = !q.loop;
-if (i.commandName === "shuffle") q.shuffle = !q.shuffle;
+if (i.commandName === "skip") {
+q.player.stop();
+return i.reply("Skip");
+}
+
+if (i.commandName === "stop") {
+q.songs = [];
+q.player.stop();
+return i.reply("Stop");
+}
+
+if (i.commandName === "loop") {
+q.loop = !q.loop;
+return i.reply("Loop: " + q.loop);
+}
+
+if (i.commandName === "shuffle") {
+q.shuffle = !q.shuffle;
+return i.reply("Shuffle: " + q.shuffle);
+}
+
 if (i.commandName === "ai") {
-if (ai.has(i.channel.id)) ai.delete(i.channel.id);
-else ai.add(i.channel.id);
-return i.reply("AI toggled");
+if (aiChannels.has(i.channel.id)) {
+aiChannels.delete(i.channel.id);
+return i.reply("AI OFF");
 }
-
+aiChannels.add(i.channel.id);
+return i.reply("AI ON");
 }
 
 } catch (e) {
 console.log(e);
 }
-
 });
 
 client.login(process.env.DISCORD_TOKEN);

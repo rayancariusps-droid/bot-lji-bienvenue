@@ -27,11 +27,17 @@ const ytdl = require("ytdl-core");
 const play = require("play-dl");
 
 // =====================
+// ANTI CRASH (RENDER FIX)
+// =====================
+process.on("uncaughtException", console.error);
+process.on("unhandledRejection", console.error);
+
+// =====================
 // WEB
 // =====================
 const app = express();
 app.get("/", (req, res) => res.send("Bot en ligne"));
-app.listen(3000);
+app.listen(process.env.PORT || 3000);
 
 // =====================
 // CLIENT
@@ -89,11 +95,7 @@ return queues.get(guildId);
 
 async function playNext(guild, channel) {
 const queue = getQueue(guild.id);
-
-if (!queue.songs.length) {
-queue.playing = false;
-return;
-}
+if (!queue.songs.length) return queue.playing = false;
 
 const song = queue.songs.shift();
 
@@ -114,17 +116,22 @@ playNext(guild, channel);
 client.once("ready", async () => {
 console.log(`Connecté : ${client.user.tag}`);
 
-const ch = await client.channels.fetch(VIOLET_CHANNEL).catch(()=>{});
+// SAFE VIOLET EMBED
+try {
+const ch = await client.channels.fetch(VIOLET_CHANNEL);
 if (ch) {
 ch.send({
 embeds: [
 new EmbedBuilder()
 .setColor("#A020F0")
 .setTitle("Information Support")
-.setDescription("Support h24 / respect obligatoire / patience demandée")
+.setDescription("Support h24 | respect obligatoire | patience demandée")
 .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1493045666702692582/17760402075634684831978161728006.gif")
 ]
 });
+}
+} catch (e) {
+console.log("Embed violet error:", e);
 }
 });
 
@@ -144,7 +151,9 @@ channel.send(
 `Prend tes rôles dans <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>`
 );
 
-} catch {}
+} catch (e) {
+console.log(e);
+}
 });
 
 // =====================
@@ -155,7 +164,6 @@ if (!presence?.member) return;
 
 const m = presence.member;
 const text = m.presence?.activities?.find(a => a.type === 4)?.state?.toLowerCase() || "";
-
 const has = text.includes("naya") || text.includes("gg.naya");
 
 if (has && !m.roles.cache.has(STATUS_ROLE)) {
@@ -168,7 +176,7 @@ m.send({
 embeds: [
 new EmbedBuilder()
 .setColor("#FFB6E6")
-.setDescription("💖 Merci d’utiliser Naya")
+.setDescription("💖 Merci d’utiliser Naya / gg.naya")
 ]
 }).catch(()=>{});
 }
@@ -241,8 +249,7 @@ return message.reply("🎵 Ajouté");
 }
 
 if (msg === "!skip") {
-const queue = getQueue(message.guild.id);
-queue.player.stop();
+getQueue(message.guild.id).player.stop();
 return message.reply("⏭️ Skip");
 }
 
@@ -275,10 +282,37 @@ const replies = [
 ];
 return message.reply(replies[Math.floor(Math.random()*replies.length)]);
 }
+
+// ---------- TICKET ----------
+if (msg === "!ticket") {
+
+const channel = await client.channels.fetch(TICKET_CHANNEL_ID);
+
+const embed = new EmbedBuilder()
+.setColor("#FFA500")
+.setTitle("🎫 Support Naya")
+.setDescription("👑 Couronne\n🛡️ Staff\n🚨 Abus\n🎉 Animation\n🤝 Partenariat")
+.setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1491682627063644232/17757152214445740943822744119404.gif");
+
+const row = new ActionRowBuilder().addComponents(
+new StringSelectMenuBuilder()
+.setCustomId("ticket")
+.setPlaceholder("Choisir")
+.addOptions([
+{ label: "Couronne", value: "couronne" },
+{ label: "Staff", value: "staff" },
+{ label: "Abus", value: "abus" },
+{ label: "Animation", value: "animation" },
+{ label: "Partenariat", value: "partenariat" }
+])
+);
+
+channel.send({ embeds: [embed], components: [row] });
+}
 });
 
 // =====================
-// INTERACTIONS (tickets + roles)
+// INTERACTIONS
 // =====================
 client.on("interactionCreate", async (interaction) => {
 
@@ -300,7 +334,7 @@ permissionOverwrites: [
 return interaction.reply({ content: "Ticket créé", ephemeral: true });
 }
 
-/* REACTION ROLES */
+/* ROLES */
 if (interaction.isStringSelectMenu() && interaction.customId !== "ticket") {
 
 const member = interaction.member;
@@ -324,4 +358,4 @@ return interaction.reply({ content: "Rôle mis à jour", ephemeral: true });
 
 });
 
-client.login(process.env.DISCORD_TOKEN);,
+client.login(process.env.DISCORD_TOKEN);

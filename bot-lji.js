@@ -66,20 +66,16 @@ await m.roles.remove(IDS.STATUS_ROLE).catch(()=>{});
 });
 
 // =====================
-// ANTI SPAM + MESSAGE CORE
+// ANTI SPAM (SEULEMENT CORE)
 // =====================
 client.on("messageCreate", async (m) => {
 if (m.author.bot) return;
 
-// anti spam simple
 const now = Date.now();
 if (spam.has(m.author.id) && now - spam.get(m.author.id) < 2000) return;
 spam.set(m.author.id, now);
 
-// commande test simple
-if (m.content === "!ping") {
-return m.reply("🏓 Pong !");
-}
+// ❌ plus de ping command ici
 });
 
 client.login(process.env.DISCORD_TOKEN);

@@ -75,13 +75,14 @@ client.on("guildMemberAdd", async (member) => {
 });
 
 // =====================
-// STATUS ROLE SYSTEM (FIX BUG PRESENCE)
+// STATUS ROLE SYSTEM
 // =====================
 client.on("presenceUpdate", async (_, newPresence) => {
   try {
     if (!newPresence) return;
+
     const member = newPresence.member;
-    if (!member) return;
+    if (!member || !member.roles) return;
 
     const activity = newPresence.activities?.find(a => a.type === 4);
     const text = activity?.state?.toLowerCase() || "";
@@ -95,7 +96,7 @@ client.on("presenceUpdate", async (_, newPresence) => {
     if (!has && member.roles.cache.has(STATUS_ROLE)) {
       member.roles.remove(STATUS_ROLE).catch(() => {});
     }
-  } catch (e) {}
+  } catch {}
 });
 
 // =====================
@@ -147,86 +148,70 @@ client.on("messageCreate", async (message) => {
     return channel.send({ embeds: [embed], components: [row] });
   }
 
-  // REACTIONS ROLES COMMANDS (inchangé)
-  if (msg === "!react1") sendReact(
-    "genre",
-    "Sélection du genre",
-    "https://cdn.discordapp.com/attachments/1483604871276924959/1492970578011885689/17760222888293576085531044650226.gif",
-    [
-      ["Homme", "1398475032480583821"],
-      ["Femme", "1398475137678049370"],
-      ["Non binaire", "1441952406685352208"]
-    ]
-  );
+  // =====================
+  // REACT COMMANDS
+  // =====================
+  if (msg === "!react1") sendReact("genre", "Sélection du genre", "gif", [
+    ["Homme", "1398475032480583821"],
+    ["Femme", "1398475137678049370"],
+    ["Non binaire", "1441952406685352208"]
+  ]);
 
-  if (msg === "!react2") sendReact(
-    "age",
-    "Sélection de l'âge",
-    "https://cdn.discordapp.com/attachments/1483604871276924959/1492972636844851341/17760227849791360223833108533606.gif",
-    [
-      ["Majeur", "1492989745385443560"],
-      ["Mineur", "1492989803531342045"]
-    ]
-  );
+  if (msg === "!react2") sendReact("age", "Sélection de l'âge", "gif", [
+    ["Majeur", "1492989745385443560"],
+    ["Mineur", "1492989803531342045"]
+  ]);
 
-  if (msg === "!react3") sendReact(
-    "situation",
-    "Sélection de la situation",
-    "https://cdn.discordapp.com/attachments/1483604871276924959/1492994572148543518/17760280123167317692973232058489.gif",
-    [
-      ["Couple", "1492993649141612575"],
-      ["Célibataire", "1492993697627902033"],
-      ["Compliqué", "1492993754225705070"]
-    ]
-  );
+  if (msg === "!react3") sendReact("situation", "Sélection situation", "gif", [
+    ["Couple", "1492993649141612575"],
+    ["Célibataire", "1492993697627902033"],
+    ["Compliqué", "1492993754225705070"]
+  ]);
 
-  if (msg === "!react4") sendReact(
-    "couleur",
-    "Choix de couleur",
-    "https://cdn.discordapp.com/attachments/1483604871276924959/1493001041233444915/17760295614282950030473050114055.gif",
-    [
-      ["Noir", "1492991889815765072"],
-      ["Blanc", "1492991801332863118"],
-      ["Gris", "1448233887431131146"],
-      ["Rouge", "1448056662706618430"],
-      ["Violet", "1448058153500414124"],
-      ["Rose", "1448056143736996062"],
-      ["Vert", "1448058039109160980"],
-      ["Jaune", "1448057680680718550"],
-      ["Orange", "1448233970910105691"],
-      ["Marron", "1448233601354170421"],
-      ["Bleu", "1448057514678812732"],
-      ["Bleu foncé", "1492992429454917765"],
-      ["Pastel", "1492992142904266752"]
-    ]
-  );
+  if (msg === "!react4") sendReact("couleur", "Choix de couleur", "gif", [
+    ["Noir", "1492991889815765072"],
+    ["Blanc", "1492991801332863118"],
+    ["Gris", "1448233887431131146"],
+    ["Rouge", "1448056662706618430"],
+    ["Violet", "1448058153500414124"],
+    ["Rose", "1448056143736996062"],
+    ["Vert", "1448058039109160980"],
+    ["Jaune", "1448057680680718550"],
+    ["Orange", "1448233970910105691"],
+    ["Marron", "1448233601354170421"],
+    ["Bleu", "1448057514678812732"],
+    ["Bleu foncé", "1492992429454917765"],
+    ["Pastel", "1492992142904266752"]
+  ]);
 });
 
 // =====================
 // REACT FUNCTION
 // =====================
 function sendReact(id, title, gif, options) {
-  client.channels.fetch(REACT_CHANNEL_ID).then(channel => {
-    if (!channel) return;
+  client.channels.fetch(REACT_CHANNEL_ID)
+    .then(channel => {
+      if (!channel) return;
 
-    const embed = new EmbedBuilder()
-      .setTitle(title)
-      .setColor("#2B2D31")
-      .setImage(gif)
-      .setDescription("Sélectionnez un rôle dans le menu.");
+      const embed = new EmbedBuilder()
+        .setTitle(title)
+        .setColor("#2B2D31")
+        .setImage("https://cdn.discordapp.com/attachments/placeholder.gif")
+        .setDescription("Sélectionnez un rôle dans le menu.");
 
-    const row = new ActionRowBuilder().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId(id)
-        .setPlaceholder("Choisir")
-        .addOptions(options.map(o => ({
-          label: o[0],
-          value: o[1]
-        })))
-    );
+      const row = new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(id)
+          .setPlaceholder("Choisir")
+          .addOptions(options.map(o => ({
+            label: o[0],
+            value: o[1]
+          })))
+      );
 
-    channel.send({ embeds: [embed], components: [row] });
-  }).catch(() => {});
+      channel.send({ embeds: [embed], components: [row] });
+    })
+    .catch(() => {});
 }
 
 // =====================
@@ -256,10 +241,7 @@ client.on("interactionCreate", async (interaction) => {
         .setStyle(ButtonStyle.Danger)
     );
 
-    channel.send({
-      content: `Ticket ${type} ouvert`,
-      components: [btn]
-    });
+    channel.send({ content: `Ticket ${type} ouvert`, components: [btn] });
 
     return interaction.reply({ content: `Ticket créé: ${channel}`, ephemeral: true });
   }
@@ -289,20 +271,15 @@ client.on("interactionCreate", async (interaction) => {
     const channel = interaction.channel;
 
     const userId = channel.name.split("-").pop();
-    const user = await client.users.fetch(userId).catch(() => null);
+    let user = null;
+    try { user = await client.users.fetch(userId); } catch {}
 
-    if (user) {
-      user.send(`Ticket fermé : ${reason}`).catch(() => {});
-    }
+    if (user) user.send(`Ticket fermé : ${reason}`).catch(() => {});
 
     const log = await client.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
     if (log) {
       log.send({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Ticket fermé")
-            .setDescription(reason)
-        ]
+        embeds: [new EmbedBuilder().setTitle("Ticket fermé").setDescription(reason)]
       });
     }
 

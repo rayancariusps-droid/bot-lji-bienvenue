@@ -65,10 +65,7 @@ client.on("guildMemberAdd", async (member) => {
     const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
     if (!channel) return;
 
-    channel.send(
-      `**Bienvenue sur Naya ❄️ ${member} ! Nous sommes maintenant ${member.guild.memberCount} membres.**\n` +
-      `**Prends tes rôles ici : <#${ROLES_CHANNEL_ID}> <@&${WELCOME_ROLE_ID}>**`
-    );
+    channel.send(`**Bienvenue sur Naya ❄️${member}!Nous sommes maintenant ${member.guild.memberCount} membres.****Prends tes rôles ici :<#${ROLES_CHANNEL_ID}><@&${WELCOME_ROLE_ID}>**`);
   } catch (err) {
     console.error("Erreur welcome:", err);
   }
@@ -107,9 +104,6 @@ client.on("messageCreate", async (message) => {
 
   const msg = message.content.toLowerCase();
 
-  // =====================
-  // TICKET PANEL
-  // =====================
   if (msg === "!ticket") {
     const channel = await client.channels.fetch(TICKET_CHANNEL_ID).catch(() => null);
     if (!channel) return;
@@ -148,9 +142,6 @@ client.on("messageCreate", async (message) => {
     return channel.send({ embeds: [embed], components: [row] });
   }
 
-  // =====================
-  // REACT COMMANDS
-  // =====================
   if (msg === "!react1") sendReact("genre", "Sélection du genre", "gif", [
     ["Homme", "1398475032480583821"],
     ["Femme", "1398475137678049370"],
@@ -220,7 +211,6 @@ function sendReact(id, title, gif, options) {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.guild || !interaction.member) return;
 
-  // TICKET CREATE
   if (interaction.isStringSelectMenu() && interaction.customId === "ticket_select") {
     const type = interaction.values[0];
 
@@ -246,7 +236,6 @@ client.on("interactionCreate", async (interaction) => {
     return interaction.reply({ content: `Ticket créé: ${channel}`, ephemeral: true });
   }
 
-  // CLOSE TICKET
   if (interaction.isButton() && interaction.customId === "close_ticket") {
     if (!interaction.member.roles.cache.has(STAFF_ROLE)) {
       return interaction.reply({ content: "Staff uniquement", ephemeral: true });
@@ -265,7 +254,6 @@ client.on("interactionCreate", async (interaction) => {
     return interaction.showModal(modal);
   }
 
-  // CLOSE SUBMIT
   if (interaction.isModalSubmit() && interaction.customId === "close_modal") {
     const reason = interaction.fields.getTextInputValue("reason");
     const channel = interaction.channel;
@@ -287,7 +275,6 @@ client.on("interactionCreate", async (interaction) => {
     setTimeout(() => channel.delete().catch(() => {}), 2000);
   }
 
-  // REACT ROLES
   if (interaction.isStringSelectMenu() && interaction.customId !== "ticket_select") {
     const member = interaction.member;
     const role = interaction.values[0];

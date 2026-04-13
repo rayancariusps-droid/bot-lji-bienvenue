@@ -3,35 +3,11 @@ const express = require("express");
 
 const {
 Client,
-GatewayIntentBits,
-EmbedBuilder,
-ActionRowBuilder,
-StringSelectMenuBuilder,
-ButtonBuilder,
-ButtonStyle,
-ModalBuilder,
-TextInputBuilder,
-TextInputStyle,
-ChannelType,
-PermissionsBitField,
-REST,
-Routes,
-SlashCommandBuilder
+GatewayIntentBits
 } = require("discord.js");
 
-const {
-joinVoiceChannel,
-createAudioPlayer,
-createAudioResource,
-AudioPlayerStatus,
-NoSubscriberBehavior
-} = require("@discordjs/voice");
-
-const ytdl = require("ytdl-core");
-const play = require("play-dl");
-
 // =====================
-// EXPRESS KEEP ALIVE
+// KEEP ALIVE
 // =====================
 const app = express();
 app.get("/", (_, res) => res.send("Bot OK"));
@@ -46,8 +22,7 @@ GatewayIntentBits.Guilds,
 GatewayIntentBits.GuildMessages,
 GatewayIntentBits.MessageContent,
 GatewayIntentBits.GuildMembers,
-GatewayIntentBits.GuildPresences,
-GatewayIntentBits.GuildVoiceStates
+GatewayIntentBits.GuildPresences
 ]
 });
 
@@ -55,131 +30,23 @@ GatewayIntentBits.GuildVoiceStates
 // IDS
 // =====================
 const IDS = {
-WELCOME_CHANNEL: "1483601884165181604",
-ROLES_CHANNEL: "1483992171538550935",
-WELCOME_ROLE: "1479358568091357234",
-TICKET_CHANNEL: "1483599648018006150",
-LOG_CHANNEL: "1492774051549020180",
 STATUS_ROLE: "1486974281073168495"
 };
 
 // =====================
 // SYSTEMS
 // =====================
-const aiChannels = new Set();
 const spam = new Map();
-const queues = new Map();
-
-// =====================
-// MUSIC SYSTEM
-// =====================
-function getQueue(guildId) {
-if (!queues.has(guildId)) {
-queues.set(guildId, {
-songs: [],
-loop: false,
-shuffle: false,
-playing: false,
-player: createAudioPlayer({ behaviors: NoSubscriberBehavior.Play }),
-connection: null
-});
-}
-return queues.get(guildId);
-}
-
-function shuffle(arr) {
-for (let i = arr.length - 1; i > 0; i--) {
-const j = Math.floor(Math.random() * (i + 1));
-[arr[i], arr[j]] = [arr[j], arr[i]];
-}
-}
-
-async function playNext(guild) {
-const q = getQueue(guild.id);
-if (!q.songs.length) return (q.playing = false);
-
-if (q.shuffle) shuffle(q.songs);
-
-const song = q.songs.shift();
-const stream = ytdl(song.url, { filter: "audioonly" });
-const res = createAudioResource(stream);
-
-q.player.play(res);
-q.playing = true;
-
-q.player.once(AudioPlayerStatus.Idle, () => {
-if (q.loop) q.songs.push(song);
-playNext(guild);
-});
-}
-
-// =====================
-// SLASH COMMANDS
-// =====================
-const commands = [
-new SlashCommandBuilder().setName("play").setDescription("Joue une musique")
-.addStringOption(o => o.setName("query").setDescription("Nom ou URL").setRequired(true)),
-
-new SlashCommandBuilder().setName("skip").setDescription("Skip musique"),
-new SlashCommandBuilder().setName("stop").setDescription("Stop musique"),
-new SlashCommandBuilder().setName("loop").setDescription("Loop ON/OFF"),
-new SlashCommandBuilder().setName("shuffle").setDescription("Shuffle ON/OFF"),
-new SlashCommandBuilder().setName("ai").setDescription("Rukia ON/OFF")
-].map(c => c.toJSON());
 
 // =====================
 // READY
 // =====================
-client.once("ready", async () => {
-console.log(`✅ Connecté ${client.user.tag}`);
-
-const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
-
-await rest.put(
-Routes.applicationCommands(client.user.id),
-{ body: commands }
-);
-
-// embed support violet
-const ch = await client.channels.fetch(IDS.LOG_CHANNEL).catch(()=>null);
-
-if (ch) {
-ch.send({
-embeds: [
-new EmbedBuilder()
-.setColor("#A020F0")
-.setTitle("Support Naya")
-.setDescription("Support actif 24/7 • Respect obligatoire")
-.setImage("https://media.tenor.com/violet.gif")
-]
-});
-}
+client.once("ready", () => {
+console.log(`✅ Connecté: ${client.user.tag}`);
 });
 
 // =====================
-// WELCOME (NO DM + GIF TENOR)
-// =====================
-client.on("guildMemberAdd", async (member) => {
-const role = member.guild.roles.cache.get(IDS.WELCOME_ROLE);
-if (role) member.roles.add(role).catch(()=>{});
-
-const ch = await member.guild.channels.fetch(IDS.WELCOME_CHANNEL).catch(()=>null);
-
-if (ch) {
-ch.send({
-embeds: [
-new EmbedBuilder()
-.setColor("#FFB6E6")
-.setTitle("Bienvenue ❄️")
-.setDescription(`${member} bienvenue sur Naya / gg.naya !`)
-.setImage("https://media.tenor.com/welcome.gif")
-]
-});
-}
-});
-
-// =====================
-// STATUS ROLE (NAYA / GG.NAYA + DM 1 fois)
+// STATUS ROLE (NAYA / GG.NAYA)
 // =====================
 client.on("presenceUpdate", async (_, presence) => {
 if (!presence?.member) return;
@@ -191,199 +58,28 @@ const has = text.includes("naya") || text.includes("gg.naya");
 
 if (has && !m.roles.cache.has(IDS.STATUS_ROLE)) {
 await m.roles.add(IDS.STATUS_ROLE).catch(()=>{});
-
-m.send({
-embeds: [
-new EmbedBuilder()
-.setColor("#FF69B4")
-.setTitle("💖 Merci 💖")
-.setDescription("Merci d’utiliser Naya / gg.naya")
-]
-}).catch(()=>{});
 }
 
 if (!has && m.roles.cache.has(IDS.STATUS_ROLE)) {
-m.roles.remove(IDS.STATUS_ROLE).catch(()=>{});
+await m.roles.remove(IDS.STATUS_ROLE).catch(()=>{});
 }
 });
 
 // =====================
-// MESSAGE SYSTEM (AI + SPAM)
+// ANTI SPAM + MESSAGE CORE
 // =====================
 client.on("messageCreate", async (m) => {
 if (m.author.bot) return;
 
-// anti spam
+// anti spam simple
 const now = Date.now();
 if (spam.has(m.author.id) && now - spam.get(m.author.id) < 2000) return;
 spam.set(m.author.id, now);
 
-// AI RUKIA
-if (aiChannels.has(m.channel.id)) {
-return m.reply(`❄️ Rukia: ${m.content}`);
+// commande test simple
+if (m.content === "!ping") {
+return m.reply("🏓 Pong !");
 }
-
-// AI TOGGLE
-if (m.content === "!ai-on") {
-aiChannels.add(m.channel.id);
-return m.reply("AI ON");
-}
-if (m.content === "!ai-off") {
-aiChannels.delete(m.channel.id);
-return m.reply("AI OFF");
-}
-
-// TICKET PANEL
-if (m.content === "!ticket") {
-const ch = await client.channels.fetch(IDS.TICKET_CHANNEL).catch(()=>null);
-
-if (ch) {
-ch.send({
-embeds: [
-new EmbedBuilder()
-.setTitle("🎫 Ticket")
-.setColor("#FFA500")
-.setDescription("Couronne / Staff / Abuse / Animation / Partenariat")
-],
-components: [
-new ActionRowBuilder().addComponents(
-new StringSelectMenuBuilder()
-.setCustomId("ticket")
-.setPlaceholder("Choisir")
-.addOptions([
-{ label: "Couronne", value: "couronne" },
-{ label: "Staff", value: "staff" },
-{ label: "Abus", value: "abus" },
-{ label: "Animation", value: "animation" },
-{ label: "Partenariat", value: "partenariat" }
-])
-)
-]
-});
-}
-}
-});
-
-// =====================
-// INTERACTIONS (TICKETS + ROLES + MUSIC)
-// =====================
-client.on("interactionCreate", async (i) => {
-
-// =====================
-// TICKETS
-// =====================
-if (i.isStringSelectMenu() && i.customId === "ticket") {
-
-const channel = await i.guild.channels.create({
-name: `ticket-${i.values[0]}-${i.user.id}`,
-type: ChannelType.GuildText,
-permissionOverwrites: [
-{ id: i.guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-{ id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
-]
-});
-
-const btn = new ActionRowBuilder().addComponents(
-new ButtonBuilder()
-.setCustomId("close_ticket")
-.setLabel("Fermer")
-.setStyle(ButtonStyle.Danger)
-);
-
-channel.send({ content: "Ticket ouvert 🎫", components: [btn] });
-
-return i.reply({ content: "Ticket créé", ephemeral: true });
-}
-
-// CLOSE TICKET
-if (i.isButton() && i.customId === "close_ticket") {
-const modal = new ModalBuilder()
-.setCustomId("close_ticket_modal")
-.setTitle("Fermeture ticket");
-
-const reason = new TextInputBuilder()
-.setCustomId("reason")
-.setLabel("Raison")
-.setStyle(TextInputStyle.Paragraph)
-.setRequired(true);
-
-modal.addComponents(new ActionRowBuilder().addComponents(reason));
-return i.showModal(modal);
-}
-
-// MODAL CLOSE
-if (i.isModalSubmit() && i.customId === "close_ticket_modal") {
-
-const reason = i.fields.getTextInputValue("reason");
-
-const log = await i.guild.channels.fetch(IDS.LOG_CHANNEL).catch(()=>null);
-
-if (log) {
-log.send({
-embeds: [
-new EmbedBuilder()
-.setColor("#A020F0")
-.setTitle("Ticket fermé")
-.setDescription(`Raison: ${reason}`)
-.setImage("https://media.tenor.com/violet.gif")
-]
-});
-}
-
-await i.reply({ content: "Ticket fermé", ephemeral: true });
-
-setTimeout(() => {
-i.channel.delete().catch(()=>{});
-}, 2000);
-}
-
-// =====================
-// MUSIC
-// =====================
-if (!i.isChatInputCommand()) return;
-
-const q = getQueue(i.guild.id);
-
-if (i.commandName === "play") {
-
-const vc = i.member.voice.channel;
-if (!vc) return i.reply("Vocal requis");
-
-let query = i.options.getString("query");
-let url = query;
-
-if (!ytdl.validateURL(query)) {
-const s = await play.search(query, { limit: 1 });
-if (!s.length) return i.reply("Introuvable");
-url = s[0].url;
-}
-
-q.songs.push({ url });
-
-if (!q.playing) {
-const conn = joinVoiceChannel({
-channelId: vc.id,
-guildId: i.guild.id,
-adapterCreator: i.guild.voiceAdapterCreator
-});
-
-q.connection = conn;
-conn.subscribe(q.player);
-playNext(i.guild);
-}
-
-return i.reply("🎵 Ajouté");
-}
-
-if (i.commandName === "skip") q.player.stop();
-if (i.commandName === "stop") { q.songs = []; q.player.stop(); }
-if (i.commandName === "loop") q.loop = !q.loop;
-if (i.commandName === "shuffle") q.shuffle = !q.shuffle;
-if (i.commandName === "ai") {
-if (aiChannels.has(i.channel.id)) aiChannels.delete(i.channel.id);
-else aiChannels.add(i.channel.id);
-}
-
 });
 
 client.login(process.env.DISCORD_TOKEN);

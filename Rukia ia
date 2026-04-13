@@ -1,0 +1,225 @@
+import json
+import time
+import asyncio
+import sqlite3
+from pathlib import Path
+from collections import defaultdict
+from fastapi import FastAPI
+import uvicorn
+
+# =========================
+# RUKIA IA — OVER GOD CORE
+# =========================
+
+class RukiaIA:
+    def __init__(self, db_path="rukia_overgod.db"):
+        self.name = "Rukia IA OVER GOD"
+        self.db_path = db_path
+
+        # Runtime systems
+        self.active_rooms = set()
+        self.user_memory = defaultdict(dict)
+        self.last_msg = defaultdict(float)
+        self.cooldown = 0.8
+
+        # Init DB
+        self.db = sqlite3.connect(self.db_path)
+        self.cursor = self.db.cursor()
+        self.init_db()
+
+        # Command router (ultra fast)
+        self.commands = {
+            "/on": self.cmd_on,
+            "/off": self.cmd_off,
+            "/ping": self.cmd_ping
+        }
+
+        # Brain v1
+        self.brain = {
+            "bonjour": "👋 Salut, je suis Rukia OVER GOD",
+            "ton nom": "Rukia IA OVER GOD MODE",
+            "aide": "Je suis une IA modulaire connectée à API + DB + plugins",
+        }
+
+        # Plugins
+        self.plugins = []
+
+        # Load memory
+        self.load_state()
+
+    # =========================
+    # DATABASE LAYER
+    # =========================
+
+    def init_db(self):
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            room TEXT,
+            user TEXT,
+            message TEXT,
+            timestamp REAL
+        )
+        """)
+
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS memory (
+            user TEXT,
+            key TEXT,
+            value TEXT
+        )
+        """)
+        self.db.commit()
+
+    def log_db(self, room, user, message):
+        self.cursor.execute(
+            "INSERT INTO logs (room,user,message,timestamp) VALUES (?,?,?,?)",
+            (room, user, message, time.time())
+        )
+        self.db.commit()
+
+    # =========================
+    # MEMORY SYSTEM
+    # =========================
+
+    def remember(self, user, key, value):
+        self.user_memory[user][key] = value
+        self.cursor.execute(
+            "INSERT INTO memory (user,key,value) VALUES (?,?,?)",
+            (user, key, value)
+        )
+        self.db.commit()
+
+    def recall(self, user, key):
+        return self.user_memory.get(user, {}).get(key)
+
+    # =========================
+    # COMMAND SYSTEM
+    # =========================
+
+    def cmd_on(self, room):
+        self.active_rooms.add(room)
+        return f"⚡ Rukia ON dans {room}"
+
+    def cmd_off(self, room):
+        self.active_rooms.discard(room)
+        return f"❌ Rukia OFF dans {room}"
+
+    def cmd_ping(self, room):
+        return "🏓 PONG OVER GOD"
+
+    def handle_command(self, room, msg):
+        return self.commands.get(msg, lambda r: None)(room)
+
+    # =========================
+    # PLUGINS
+    # =========================
+
+    def register_plugin(self, fn):
+        self.plugins.append(fn)
+
+    def run_plugins(self, msg, room, user):
+        for p in self.plugins:
+            out = p(msg, room, user, self)
+            if out:
+                return out
+        return None
+
+    # =========================
+    # BRAIN
+    # =========================
+
+    def think(self, msg):
+        msg = msg.lower()
+        for k, v in self.brain.items():
+            if k in msg:
+                return v
+        return "🤖 Je réfléchis..."
+
+    # =========================
+    # CORE HANDLER
+    # =========================
+
+    async def handle_message(self, room, user, msg):
+
+        # anti spam
+        now = time.time()
+        if now - self.last_msg[user] < self.cooldown:
+            return "⏳ Cooldown actif"
+        self.last_msg[user] = now
+
+        # log
+        self.log_db(room, user, msg)
+
+        # commands
+        cmd = self.handle_command(room, msg)
+        if cmd:
+            return cmd
+
+        # room gate
+        if room not in self.active_rooms:
+            return "IA OFF"
+
+        # plugins
+        plug = self.run_plugins(msg, room, user)
+        if plug:
+            return plug
+
+        # memory trigger
+        if "je m'appelle" in msg.lower():
+            name = msg.split("je m'appelle")[-1].strip()
+            self.remember(user, "name", name)
+            return f"Enchanté {name} 👑"
+
+        return self.think(msg)
+
+    # =========================
+    # STATE LOAD
+    # =========================
+
+    def load_state(self):
+        rows = self.cursor.execute("SELECT user,key,value FROM memory").fetchall()
+        for u, k, v in rows:
+            self.user_memory[u][k] = v
+
+    # =========================
+    # CLI
+    # =========================
+
+    def chat(self):
+        print("👑 RUKIA OVER GOD ONLINE")
+        while True:
+            room = input("Room: ")
+            user = input("User: ")
+            msg = input("Msg: ")
+            print(asyncio.run(self.handle_message(room, user, msg)))
+
+
+# =========================
+# FASTAPI WEB LAYER
+# =========================
+
+app = FastAPI()
+bot = RukiaIA()
+
+@app.get("/chat")
+async def chat(room: str, user: str, msg: str):
+    return {"response": await bot.handle_message(room, user, msg)}
+
+# =========================
+# PLUGIN EXAMPLE
+# =========================
+
+def joke_plugin(msg, room, user, bot):
+    if "blague" in msg.lower():
+        return "😂 Les IA rêvent de RAM infinie"
+
+bot.register_plugin(joke_plugin)
+
+# =========================
+# RUN SERVER
+# =========================
+
+if __name__ == "__main__":
+    print("🚀 Starting OVER GOD Rukia...")
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -215,7 +215,7 @@ client.on("interactionCreate", async (interaction) => {
     const type = interaction.values[0];
 
     const channel = await interaction.guild.channels.create({
-      name: `ticket-${type}-${interaction.user.id}`,
+      name: `ticket-${type}-${interaction.user.username}`,
       type: ChannelType.GuildText,
       permissionOverwrites: [
         { id: interaction.guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
@@ -258,18 +258,29 @@ client.on("interactionCreate", async (interaction) => {
     const reason = interaction.fields.getTextInputValue("reason");
     const channel = interaction.channel;
 
-    const userId = channel.name.split("-").pop();
-    let user = null;
-    try { user = await client.users.fetch(userId); } catch {}
+    const username = channel.name.split("-").pop();
 
-    if (user) user.send(`Ticket fermé : ${reason}`).catch(() => {});
+    const embed = new EmbedBuilder()
+      .setTitle("📜 Ticket fermé")
+      .setColor("#8A2BE2")
+      .setDescription(
+`👤 **Utilisateur**
+${username}
+🔒 **Fermé par**
+${interaction.user}
+📁 **Ticket**
+${channel.name}
+📝 **Raison**
+${reason}`
+      )
+      .setImage("https://cdn.discordapp.com/attachments/1483604871276924959/1493040552038633604/1776038984811355544992923524004.gif")
+      .setTimestamp();
 
     const log = await client.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
-    if (log) {
-      log.send({
-        embeds: [new EmbedBuilder().setTitle("Ticket fermé").setDescription(reason)]
-      });
-    }
+    if (log) log.send({ embeds: [embed] });
+
+    const member = interaction.guild.members.cache.find(m => m.user.username === username);
+    if (member) member.send({ embeds: [embed] }).catch(() => {});
 
     await interaction.reply({ content: "Ticket fermé", ephemeral: true });
     setTimeout(() => channel.delete().catch(() => {}), 2000);

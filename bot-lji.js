@@ -65,7 +65,7 @@ client.on("guildMemberAdd", async (member) => {
     const channel = await member.guild.channels.fetch(WELCOME_CHANNEL_ID).catch(() => null);
     if (!channel) return;
 
-    channel.send(`**Bienvenue sur Naya ❄️${member}!Nous sommes maintenant ${member.guild.memberCount} membres.****Prends tes rôles ici :<#${ROLES_CHANNEL_ID}><@&${WELCOME_ROLE_ID}>**`);
+    channel.send(`**Bienvenue sur Naya ❄️ ${member} ! Nous sommes maintenant ${member.guild.memberCount} membres. Prends tes rôles ici : <#${ROLES_CHANNEL_ID}> <@&1496497468324712449>**`);
   } catch (err) {
     console.error("Erreur welcome:", err);
   }
@@ -76,12 +76,12 @@ client.on("guildMemberAdd", async (member) => {
 // =====================
 client.on("presenceUpdate", async (_, newPresence) => {
   try {
-    if (!newPresence) return;
+    if (!newPresence || !newPresence.activities) return;
 
     const member = newPresence.member;
     if (!member || !member.roles) return;
 
-    const activity = newPresence.activities?.find(a => a.type === 4);
+    const activity = newPresence.activities.find(a => a.type === 4);
     const text = activity?.state?.toLowerCase() || "";
 
     const has = text.includes("/naya") || text.includes("gg.naya");
@@ -215,7 +215,7 @@ client.on("interactionCreate", async (interaction) => {
     const type = interaction.values[0];
 
     const channel = await interaction.guild.channels.create({
-      name: `ticket-${type}-${interaction.user.username}`,
+      name: `ticket-${type}-${interaction.user.id}`,
       type: ChannelType.GuildText,
       permissionOverwrites: [
         { id: interaction.guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
@@ -231,7 +231,10 @@ client.on("interactionCreate", async (interaction) => {
         .setStyle(ButtonStyle.Danger)
     );
 
-    channel.send({ content: `Ticket ${type} ouvert`, components: [btn] });
+    channel.send({
+      content: `🎫 **Votre ticket est ouvert merci de prendre un <@&1390086486291910726> va bientôt vous prendre en charge**`,
+      components: [btn]
+    });
 
     return interaction.reply({ content: `Ticket créé: ${channel}`, ephemeral: true });
   }
@@ -258,14 +261,15 @@ client.on("interactionCreate", async (interaction) => {
     const reason = interaction.fields.getTextInputValue("reason");
     const channel = interaction.channel;
 
-    const username = channel.name.split("-").pop();
+    const userId = channel.name.split("-").pop();
+    const member = await interaction.guild.members.fetch(userId).catch(() => null);
 
     const embed = new EmbedBuilder()
       .setTitle("📜 Ticket fermé")
       .setColor("#8A2BE2")
       .setDescription(
 `👤 **Utilisateur**
-${username}
+<@${userId}>
 🔒 **Fermé par**
 ${interaction.user}
 📁 **Ticket**
@@ -279,7 +283,6 @@ ${reason}`
     const log = await client.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
     if (log) log.send({ embeds: [embed] });
 
-    const member = interaction.guild.members.cache.find(m => m.user.username === username);
     if (member) member.send({ embeds: [embed] }).catch(() => {});
 
     await interaction.reply({ content: "Ticket fermé", ephemeral: true });
